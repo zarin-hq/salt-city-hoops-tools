@@ -138,7 +138,7 @@ export default function FreeAgency() {
           </CollapsibleSection>
 
           <CollapsibleSection title="Trades" subtitle="Construct trades with salary matching">
-            <TradeBuilder state={state} dispatch={dispatch} roster={roster} />
+            <TradeBuilder state={state} dispatch={dispatch} roster={roster} computed={computed} />
           </CollapsibleSection>
 
           <CollapsibleSection title="Depth Chart" subtitle="Drag and drop your projected lineup">

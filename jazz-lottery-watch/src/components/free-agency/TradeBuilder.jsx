@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { evaluateTrade } from '../../data/trade-rules'
 
 const fmt = n => `$${(n / 1_000_000).toFixed(1)}M`
 
@@ -8,7 +9,7 @@ const EMPTY_TRADE = {
   otherOut: [],  // [{ name, salary }]
 }
 
-export default function TradeBuilder({ state, dispatch, roster }) {
+export default function TradeBuilder({ state, dispatch, roster, computed }) {
   const [trade, setTrade] = useState({ ...EMPTY_TRADE })
   const [jazzInput, setJazzInput] = useState({ name: '', salary: '' })
   const [otherInput, setOtherInput] = useState({ name: '', salary: '' })
@@ -49,6 +50,8 @@ export default function TradeBuilder({ state, dispatch, roster }) {
 
   const jazzOutTotal = trade.jazzOut.reduce((s, p) => s + p.salary, 0)
   const otherOutTotal = trade.otherOut.reduce((s, p) => s + p.salary, 0)
+  const hasTradePlayers = trade.jazzOut.length > 0 || trade.otherOut.length > 0
+  const tradeResult = hasTradePlayers ? evaluateTrade(computed.totalPayroll, jazzOutTotal, otherOutTotal) : null
 
   return (
     <div className="space-y-3">
@@ -177,25 +180,74 @@ export default function TradeBuilder({ state, dispatch, roster }) {
 
         {/* Save trade footer */}
         <div style={{ borderTop: '1px solid var(--border)' }} />
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div className="text-xs" style={{ color: 'var(--text-faint)' }}>
-            Net salary: <span className="font-bold tabular-nums" style={{ color: 'var(--sch-black)' }}>
-              {otherOutTotal - jazzOutTotal >= 0 ? '+' : ''}{fmt(otherOutTotal - jazzOutTotal)}
-            </span>
+        <div className="px-4 py-3 space-y-2">
+          {/* Row 1: Net salary + valid/invalid badge */}
+          <div className="flex items-center justify-between">
+            <div className="text-xs" style={{ color: 'var(--text-faint)' }}>
+              Net salary: <span className="font-bold tabular-nums" style={{ color: 'var(--sch-black)' }}>
+                {otherOutTotal - jazzOutTotal >= 0 ? '+' : ''}{fmt(otherOutTotal - jazzOutTotal)}
+              </span>
+            </div>
+            {tradeResult && tradeResult.ruleLabel && (
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{
+                  background: tradeResult.valid ? '#dcfce7' : '#fee2e2',
+                  color: tradeResult.valid ? '#166534' : '#991b1b',
+                }}
+              >
+                {tradeResult.valid ? 'Valid' : 'Invalid'}
+              </span>
+            )}
           </div>
-          <button
-            onClick={saveTrade}
-            disabled={trade.jazzOut.length === 0 && trade.otherOut.length === 0}
-            className={`text-xs font-bold px-4 py-2 rounded ${(trade.jazzOut.length > 0 || trade.otherOut.length > 0) ? 'btn-teal' : ''}`}
-            style={{
-              background: (trade.jazzOut.length > 0 || trade.otherOut.length > 0) ? 'var(--sch-teal-bright)' : 'var(--bg-raised)',
-              color: (trade.jazzOut.length > 0 || trade.otherOut.length > 0) ? 'var(--sch-black)' : 'var(--text-faint)',
-              border: 'none',
-              cursor: (trade.jazzOut.length > 0 || trade.otherOut.length > 0) ? 'pointer' : 'default',
-            }}
-          >
-            Save Trade
-          </button>
+
+          {/* Row 2: Rule label + max incoming */}
+          {tradeResult && tradeResult.ruleLabel && (
+            <div className="flex items-center justify-between text-[11px]">
+              <span style={{ color: 'var(--text-muted)' }}>{tradeResult.ruleLabel}</span>
+              <span className="tabular-nums" style={{ color: 'var(--text-muted)' }}>
+                Max incoming: <span className="font-bold" style={{ color: 'var(--sch-black)' }}>{fmt(tradeResult.maxIncoming)}</span>
+              </span>
+            </div>
+          )}
+
+          {/* Row 3: Progress bar — incoming vs. max capacity */}
+          {tradeResult && tradeResult.maxIncoming > 0 && otherOutTotal > 0 && (
+            <div>
+              <div className="rounded-full overflow-hidden" style={{ height: 6, background: 'var(--bg-raised)' }}>
+                <div
+                  className="rounded-full"
+                  style={{
+                    height: '100%',
+                    width: `${Math.min((otherOutTotal / tradeResult.maxIncoming) * 100, 100)}%`,
+                    background: tradeResult.valid ? 'var(--sch-teal-bright)' : '#ef4444',
+                    transition: 'width 0.2s, background 0.2s',
+                  }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>
+                <span className="tabular-nums">{fmt(otherOutTotal)} incoming</span>
+                <span className="tabular-nums">{fmt(tradeResult.maxIncoming)} max</span>
+              </div>
+            </div>
+          )}
+
+          {/* Row 4: Save button */}
+          <div className="flex justify-end">
+            <button
+              onClick={saveTrade}
+              disabled={!hasTradePlayers}
+              className={`text-xs font-bold px-4 py-2 rounded ${hasTradePlayers ? 'btn-teal' : ''}`}
+              style={{
+                background: hasTradePlayers ? 'var(--sch-teal-bright)' : 'var(--bg-raised)',
+                color: hasTradePlayers ? 'var(--sch-black)' : 'var(--text-faint)',
+                border: 'none',
+                cursor: hasTradePlayers ? 'pointer' : 'default',
+              }}
+            >
+              {hasTradePlayers && tradeResult && !tradeResult.valid && tradeResult.ruleLabel ? 'Save Trade (Invalid)' : 'Save Trade'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -79,7 +79,7 @@ function launchConfetti() {
 // Reveal order: 14 → 5 quickly, then 4 → 1 dramatically
 const REVEAL_SEQUENCE = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
-function PickRow({ pick, entry }) {
+function PickRow({ pick, entry, oddsPct }) {
   const isTop4 = pick <= 4
   const jump = entry ? entry.slot - pick : 0
 
@@ -123,11 +123,21 @@ function PickRow({ pick, entry }) {
               {entry.wins}–{entry.losses} · Seed #{entry.slot}
             </div>
           </div>
-          <div
-            className="text-xs font-bold flex-shrink-0 tabular-nums"
-            style={{ color: jump > 0 ? '#16a34a' : jump < 0 ? '#dc2626' : 'var(--text-faint)', minWidth: 36, textAlign: 'right' }}
-          >
-            {jump > 0 ? `↑ +${jump}` : jump < 0 ? `↓ ${jump}` : '—'}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {oddsPct != null && (
+              <div
+                className="text-[11px] font-semibold tabular-nums"
+                style={{ color: 'var(--text-muted)', minWidth: 40, textAlign: 'right' }}
+              >
+                {oddsPct < 0.1 ? '<0.1' : oddsPct.toFixed(1)}%
+              </div>
+            )}
+            <div
+              className="text-xs font-bold tabular-nums"
+              style={{ color: jump > 0 ? '#16a34a' : jump < 0 ? '#dc2626' : 'var(--text-faint)', minWidth: 36, textAlign: 'right' }}
+            >
+              {jump > 0 ? `↑ +${jump}` : jump < 0 ? `↓ ${jump}` : '—'}
+            </div>
           </div>
         </div>
       ) : (
@@ -140,7 +150,7 @@ function PickRow({ pick, entry }) {
   )
 }
 
-export default function LotterySimulator() {
+export default function LotterySimulator({ standings }) {
   const [open, setOpen] = useState(false)
   const [results, setResults] = useState(null)
   const [revealed, setRevealed] = useState(new Set())
@@ -211,6 +221,18 @@ export default function LotterySimulator() {
 
   const byPick = results ? Object.fromEntries(results.map(r => [r.pick, r])) : {}
 
+  // Build lookup: pick → odds % that this team lands at this pick
+  const oddsMap = {}
+  if (results && standings) {
+    const standingsById = Object.fromEntries(standings.map(t => [t.team_id, t]))
+    results.forEach(r => {
+      const team = standingsById[r.team_id]
+      if (team?.pick_odds) {
+        oddsMap[r.pick] = Number(team.pick_odds[String(r.pick)] ?? 0)
+      }
+    })
+  }
+
   return (
     <>
       <button
@@ -270,6 +292,7 @@ export default function LotterySimulator() {
               <div style={{ width: 28 }}>Pick</div>
               <div style={{ width: 32 }} />
               <div className="flex-1">Team</div>
+              <div style={{ minWidth: 40, textAlign: 'right' }}>Odds</div>
               <div style={{ minWidth: 36, textAlign: 'right' }}>Move</div>
             </div>
 
@@ -280,6 +303,7 @@ export default function LotterySimulator() {
                   key={pick}
                   pick={pick}
                   entry={revealed.has(pick) ? byPick[pick] : null}
+                  oddsPct={revealed.has(pick) ? oddsMap[pick] : null}
                 />
               ))}
             </div>

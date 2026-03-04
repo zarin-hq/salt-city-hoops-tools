@@ -145,7 +145,10 @@ export default function App() {
         </section>
       </main>
 
-      <footer className="max-w-[1600px] mx-auto px-4 py-6" />
+      <section className="max-w-[1600px] mx-auto px-4 pt-4 pb-10">
+        <SectionHeader title="Discussion" />
+        <DiscourseComments />
+      </section>
     </>
   )
 }
@@ -205,4 +208,31 @@ function SectionHeader({ title, subtitle }) {
       )}
     </div>
   )
+}
+
+function DiscourseComments() {
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    window.DiscourseEmbed = {
+      discourseUrl: 'https://saltcityhoops.discourse.group/',
+      discourseEmbedUrl: 'https://jazz-lottery-watch.vercel.app/jazz-lottery-watch',
+    }
+
+    const script = document.createElement('script')
+    script.type = 'text/javascript'
+    script.async = true
+    script.src = 'https://saltcityhoops.discourse.group/javascripts/embed.js'
+    el.appendChild(script)
+
+    return () => {
+      script.remove()
+      delete window.DiscourseEmbed
+    }
+  }, [])
+
+  return <div ref={containerRef} id="discourse-comments" />
 }

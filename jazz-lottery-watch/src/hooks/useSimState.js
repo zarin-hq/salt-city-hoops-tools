@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useMemo } from 'react'
-import { CAP_NUMBERS, GUARANTEED, NON_GUARANTEED, RFA_DECISIONS, TEAM_OPTIONS } from '../data/jazz-contracts'
+import { CAP_NUMBERS, GUARANTEED, NON_GUARANTEED, RFA_DECISIONS, TEAM_OPTIONS, CAP_HOLDS } from '../data/jazz-contracts'
 
 const STORAGE_KEY = 'jazz-fa-sim'
 
@@ -17,10 +17,15 @@ function defaultState() {
   const rfaDecisions = {}
   RFA_DECISIONS.forEach(p => { rfaDecisions[p.name] = { decision: 'dont_sign', salary: 0 } })
 
+  // Cap hold decisions: default to keep (retain Bird rights)
+  const capHoldDecisions = {}
+  CAP_HOLDS.forEach(p => { capHoldDecisions[p.name] = 'keep' })
+
   return {
     nonGuaranteedDecisions,   // { playerName: 'keep' | 'waive' }
     teamOptionDecisions,      // { playerName: 'exercise' | 'decline' }
     rfaDecisions,             // { playerName: { decision: 'resign' | 'dont_sign', salary: number } }
+    capHoldDecisions,         // { playerName: 'keep' | 'renounce' }
     draftPick: null,          // { pick: number, name: string, salary: number }
     signedFAs: [],            // [{ name, position, salary, signingType: 'mle'|'vet_min'|'custom', age?, team?, type? }]
     trades: [],               // [{ id, jazzOut: [...], otherTeam: string, otherOut: [...] }]
@@ -69,14 +74,42 @@ function reducer(state, action) {
         },
       }
     }
-    case 'SET_RFA_DECISION':
-      return {
+    case 'TOGGLE_CAP_HOLD': {
+      const current = state.capHoldDecisions[action.player]
+      const next = current === 'keep' ? 'renounce' : 'keep'
+      const newState = {
+        ...state,
+        capHoldDecisions: {
+          ...state.capHoldDecisions,
+          [action.player]: next,
+        },
+      }
+      // Cross-link: renouncing Kessler's cap hold forces RFA to "don't sign"
+      if (action.player === 'Walker Kessler' && next === 'renounce') {
+        newState.rfaDecisions = {
+          ...newState.rfaDecisions,
+          'Walker Kessler': { decision: 'dont_sign', salary: 0 },
+        }
+      }
+      return newState
+    }
+    case 'SET_RFA_DECISION': {
+      const newState = {
         ...state,
         rfaDecisions: {
           ...state.rfaDecisions,
           [action.player]: { decision: action.decision, salary: action.salary || 0 },
         },
       }
+      // Cross-link: re-signing Kessler as RFA forces cap hold to "keep"
+      if (action.player === 'Walker Kessler' && action.decision === 'resign') {
+        newState.capHoldDecisions = {
+          ...newState.capHoldDecisions,
+          'Walker Kessler': 'keep',
+        }
+      }
+      return newState
+    }
     case 'SET_DRAFT_PICK':
       return { ...state, draftPick: action.payload }
     case 'SIGN_FA':
@@ -120,6 +153,17 @@ export default function useSimState() {
     TEAM_OPTIONS.forEach(p => {
       if (state.teamOptionDecisions[p.name] === 'exercise') {
         totalPayroll += p.salary
+      }
+    })
+
+    // Cap holds: add if kept and not re-signed as RFA (avoid double-counting)
+    CAP_HOLDS.forEach(p => {
+      if (state.capHoldDecisions[p.name] === 'keep') {
+        const rfaD = state.rfaDecisions?.[p.name]
+        const reSignedAsRFA = rfaD && rfaD.decision === 'resign'
+        if (!reSignedAsRFA) {
+          totalPayroll += p.capHold
+        }
       }
     })
 

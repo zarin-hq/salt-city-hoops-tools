@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import useSimState from '../hooks/useSimState'
 import { LayoutConfig } from '../components/Layout'
+import CapHolds from '../components/free-agency/CapHolds'
 import CapOverview from '../components/free-agency/CapOverview'
 import CurrentRoster from '../components/free-agency/CurrentRoster'
 import DraftPick from '../components/free-agency/DraftPick'
@@ -121,6 +122,10 @@ export default function FreeAgency() {
       <div className="max-w-[1600px] mx-auto px-4 py-8 flex gap-6">
         {/* Left column — main content */}
         <main className="flex-1 min-w-0 space-y-[22px]">
+          <CollapsibleSection title="Cap Holds" subtitle="Keep or renounce Bird rights for pending free agents">
+            <CapHolds state={state} dispatch={dispatch} />
+          </CollapsibleSection>
+
           <CollapsibleSection title="Cap Overview" subtitle="2026-27 salary cap projections">
             <CapOverview computed={computed} />
           </CollapsibleSection>

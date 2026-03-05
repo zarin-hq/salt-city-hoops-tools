@@ -87,7 +87,7 @@ export default function CurrentRoster({ state, dispatch }) {
 
             {/* RFA Re-sign Decisions */}
             <GroupLabel label="Restricted Free Agents" />
-            {RFA_DECISIONS.map(p => {
+            {RFA_DECISIONS.filter(p => !(state.capHoldDecisions?.[p.name] === 'renounce')).map(p => {
               const d = state.rfaDecisions?.[p.name] || { decision: 'dont_sign', salary: 0 }
               const signed = d.decision === 'resign'
               return (

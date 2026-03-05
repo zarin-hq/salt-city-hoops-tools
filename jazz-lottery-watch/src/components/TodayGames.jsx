@@ -217,7 +217,7 @@ function TeamRow({ teamId, name, record, score, lotterySlot, inBottom10, isWinni
   const lastName = name.split(' ').slice(-1)[0]
   return (
     <div className="flex items-center px-2.5 py-2 sm:px-3 sm:py-3"
-      style={{ background: isWinning ? 'var(--bg-raised)' : 'transparent' }}>
+      style={{ opacity: showScore && !isWinning ? 0.45 : 1 }}>
       <img
         src={`https://cdn.nba.com/logos/nba/${teamId}/primary/L/logo.svg`}
         alt=""
@@ -251,7 +251,7 @@ function TeamRow({ teamId, name, record, score, lotterySlot, inBottom10, isWinni
 
       {showScore && score != null && (
         <span className="text-lg sm:text-xl font-bold tabular-nums ml-2 flex-shrink-0"
-          style={{ color: isWinning ? 'var(--text)' : 'var(--text-faint)' }}>
+          style={{ color: 'var(--text)' }}>
           {score}
         </span>
       )}

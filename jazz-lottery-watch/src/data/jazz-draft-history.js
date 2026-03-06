@@ -16,23 +16,23 @@ const JAZZ_DRAFT_HISTORY = [
     ageAtDraft: 22.3, height: "6'2", heightIn: 74, country: 'USA', collegeStats: { ppg: 17.1, rpg: 3.1, apg: 4.5, threePct: 38.1 } },
 
   // ── 2024 ──
-  { year: 2024, round: 1, pick: 10, name: 'Cody Williams', position: 'SF', college: 'Colorado', yearsNba: 1, yearsWithJazz: 1, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4895758,
+  { year: 2024, round: 1, pick: 10, name: 'Cody Williams', position: 'SF', college: 'Colorado', yearsNba: 2, yearsWithJazz: 2, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4895758,
     ageAtDraft: 19.6, height: "6'8", heightIn: 80, country: 'USA', collegeStats: { ppg: 11.9, rpg: 3.0, apg: 1.4, threePct: 41.5 } },
-  { year: 2024, round: 1, pick: 29, name: 'Isaiah Collier', position: 'PG', college: 'USC', yearsNba: 1, yearsWithJazz: 1, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4683766,
+  { year: 2024, round: 1, pick: 29, name: 'Isaiah Collier', position: 'PG', college: 'USC', yearsNba: 2, yearsWithJazz: 2, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4683766,
     ageAtDraft: 19.7, height: "6'5", heightIn: 77, country: 'USA', collegeStats: { ppg: 16.3, rpg: 2.9, apg: 4.3, threePct: 32.0 } },
-  { year: 2024, round: 2, pick: 32, name: 'Kyle Filipowski', position: 'C', college: 'Duke', yearsNba: 1, yearsWithJazz: 1, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4684793,
+  { year: 2024, round: 2, pick: 32, name: 'Kyle Filipowski', position: 'C', college: 'Duke', yearsNba: 2, yearsWithJazz: 2, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4684793,
     ageAtDraft: 20.6, height: "6'11", heightIn: 83, country: 'USA', collegeStats: { ppg: 16.4, rpg: 8.3, apg: 2.8, threePct: 34.8 } },
 
   // ── 2023 ──
-  { year: 2023, round: 1, pick: 9, name: 'Taylor Hendricks', position: 'PF', college: 'UCF', yearsNba: 2, yearsWithJazz: 2, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4684806,
+  { year: 2023, round: 1, pick: 9, name: 'Taylor Hendricks', position: 'PF', college: 'UCF', yearsNba: 3, yearsWithJazz: 3, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4684806,
     ageAtDraft: 19.6, height: "6'9", heightIn: 81, country: 'USA', collegeStats: { ppg: 13.4, rpg: 7.3, apg: 0.6, threePct: 39.4 } },
-  { year: 2023, round: 1, pick: 16, name: 'Keyonte George', position: 'SG', college: 'Baylor', yearsNba: 2, yearsWithJazz: 2, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4433627,
+  { year: 2023, round: 1, pick: 16, name: 'Keyonte George', position: 'SG', college: 'Baylor', yearsNba: 3, yearsWithJazz: 3, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 4433627,
     ageAtDraft: 19.6, height: "6'4", heightIn: 76, country: 'USA', collegeStats: { ppg: 15.3, rpg: 2.8, apg: 3.4, threePct: 32.0 } },
-  { year: 2023, round: 1, pick: 28, name: 'Brice Sensabaugh', position: 'SF', college: 'Ohio State', yearsNba: 2, yearsWithJazz: 2, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 5105839,
+  { year: 2023, round: 1, pick: 28, name: 'Brice Sensabaugh', position: 'SF', college: 'Ohio State', yearsNba: 3, yearsWithJazz: 3, stillOnTeam: true, peakTier: 'tbd', note: '', espnId: 5105839,
     ageAtDraft: 19.7, height: "6'6", heightIn: 78, country: 'USA', collegeStats: { ppg: 16.3, rpg: 3.0, apg: 1.6, threePct: 36.0 } },
 
   // ── 2022 ──
-  { year: 2022, round: 1, pick: 22, name: 'Walker Kessler', position: 'C', college: 'Auburn', yearsNba: 3, yearsWithJazz: 3, stillOnTeam: true, peakTier: 'starter', note: 'Acquired via trade on draft night', espnId: 4433136,
+  { year: 2022, round: 1, pick: 22, name: 'Walker Kessler', position: 'C', college: 'Auburn', yearsNba: 4, yearsWithJazz: 4, stillOnTeam: true, peakTier: 'starter', note: 'Acquired via trade on draft night', espnId: 4433136,
     ageAtDraft: 20.9, height: "7'1", heightIn: 85, country: 'USA', collegeStats: { ppg: 11.4, rpg: 8.1, apg: 0.6, threePct: null } },
   { year: 2022, round: 1, pick: 25, name: 'Ochai Agbaji', position: 'SG', college: 'Kansas', yearsNba: 3, yearsWithJazz: 1, stillOnTeam: false, peakTier: 'rotation', note: 'Traded to CLE in Mitchell deal', espnId: 4397018,
     ageAtDraft: 22.2, height: "6'5", heightIn: 77, country: 'USA', collegeStats: { ppg: 18.8, rpg: 5.1, apg: 1.5, threePct: 40.8 } },
@@ -178,7 +178,7 @@ const JAZZ_DRAFT_HISTORY = [
     ageAtDraft: 21.7, height: "7'1", heightIn: 85, country: 'USA' },
 
   // ── 1989 ──
-  { year: 1989, round: 1, pick: 23, name: 'Blue Edwards', position: 'SG', college: 'East Carolina', yearsNba: 10, yearsWithJazz: 3, stillOnTeam: false, peakTier: 'rotation', note: '', espnId: 3695,
+  { year: 1989, round: 1, pick: 23, name: 'Blue Edwards', position: 'SG', college: 'East Carolina', yearsNba: 10, yearsWithJazz: 3, stillOnTeam: false, peakTier: 'rotation', note: '', espnId: 3695, photoUrl: '/players/blue-edwards.jpg',
     ageAtDraft: 23.6, height: "6'4", heightIn: 76, country: 'USA', collegeStats: { ppg: 17.2, rpg: 6.4, apg: 3.2, threePct: null } },
 
   // ── 1988 ──

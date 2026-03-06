@@ -1,16 +1,35 @@
 import { CAP_NUMBERS } from './jazz-contracts'
 
 /**
- * Evaluate whether a trade satisfies NBA CBA salary-matching rules (2023 CBA, 2024-25 onward).
+ * NBA CBA trade salary-matching rules (2023 CBA, 2024-25 onward).
+ *
+ * Thresholds are indexed to the salary cap. Base amounts from 2023-24
+ * ($136,021,000 cap) scale proportionally each year:
+ *   Base tier 1:  $7,500,000  → ~5.51% of cap
+ *   Base tier 2:  $29,000,000 → ~21.32% of cap
+ *   Base flat add: $250,000   → ~0.184% of cap
  *
  * Tiers (over cap, below first apron):
- *   Outgoing ≤ $7.5M  → incoming ≤ 200% + $250K
- *   $7.5M < outgoing ≤ $29M → incoming ≤ outgoing + $7.5M
- *   Outgoing > $29M   → incoming ≤ 125% + $250K
+ *   Outgoing ≤ tier1  → incoming ≤ 200% + flatAdd
+ *   tier1 < outgoing ≤ tier2 → incoming ≤ outgoing + tier1
+ *   Outgoing > tier2  → incoming ≤ 125% + flatAdd
  *
  * Above first apron: incoming ≤ 100% of outgoing (dollar-for-dollar)
- * Above second apron: same as first apron + cannot aggregate salaries
- *
+ * Above second apron: same + cannot aggregate salaries
+ */
+
+const BASE_CAP = 136_021_000 // 2023-24 salary cap (CBA base year)
+
+function indexedAmounts(currentCap) {
+  const scale = currentCap / BASE_CAP
+  return {
+    tier1:   Math.round(7_500_000 * scale),   // ~$9.15M for 2026-27
+    tier2:   Math.round(29_000_000 * scale),   // ~$35.39M for 2026-27
+    flatAdd: Math.round(250_000 * scale),      // ~$305K for 2026-27
+  }
+}
+
+/**
  * @param {number} totalPayroll  Jazz current total payroll (before this trade)
  * @param {number} jazzOutTotal  Total salary Jazz sends out in this trade
  * @param {number} otherOutTotal Total salary Jazz receives (other team sends out)
@@ -19,6 +38,7 @@ import { CAP_NUMBERS } from './jazz-contracts'
  */
 export function evaluateTrade(totalPayroll, jazzOutTotal, otherOutTotal, jazzOutCount = 1) {
   const { salaryCap, firstApron, secondApron } = CAP_NUMBERS
+  const idx = indexedAmounts(salaryCap)
 
   // Nothing happening — no validation needed
   if (jazzOutTotal === 0 && otherOutTotal === 0) {
@@ -35,17 +55,17 @@ export function evaluateTrade(totalPayroll, jazzOutTotal, otherOutTotal, jazzOut
   // Under the salary cap — can absorb into available cap space
   if (capSpace > 0) {
     if (jazzOutTotal === 0) {
-      // Pure absorption into cap space (+ $250K room TPE)
-      const maxIncoming = capSpace + 250_000
+      // Pure absorption into cap space (+ indexed room TPE)
+      const maxIncoming = capSpace + idx.flatAdd
       return {
         valid: otherOutTotal <= maxIncoming,
         maxIncoming,
         ruleLabel: 'Cap space absorption',
-        ruleDetail: 'Can absorb up to available cap space + $250K.',
+        ruleDetail: `Can absorb up to available cap space + ${fmtK(idx.flatAdd)}.`,
       }
     }
     // Under cap + sending salary: cap space + standard matching on the outgoing
-    const standardMax = computeMatchingMax(jazzOutTotal)
+    const standardMax = computeMatchingMax(jazzOutTotal, idx)
     const maxIncoming = capSpace + standardMax
     return {
       valid: otherOutTotal <= maxIncoming,
@@ -57,7 +77,6 @@ export function evaluateTrade(totalPayroll, jazzOutTotal, otherOutTotal, jazzOut
 
   // Over the cap — salary matching rules apply
   if (jazzOutTotal === 0) {
-    // Over the cap with no outgoing salary — cannot absorb
     return {
       valid: false,
       maxIncoming: 0,
@@ -70,7 +89,6 @@ export function evaluateTrade(totalPayroll, jazzOutTotal, otherOutTotal, jazzOut
   const aboveFirstApron = totalPayroll > firstApron
 
   if (aboveSecondApron) {
-    // Above second apron: dollar-for-dollar + cannot aggregate salaries
     const maxIncoming = jazzOutTotal
     const aggregationWarning = jazzOutCount > 1
       ? ' Cannot aggregate multiple player salaries above the second apron.'
@@ -84,7 +102,6 @@ export function evaluateTrade(totalPayroll, jazzOutTotal, otherOutTotal, jazzOut
   }
 
   if (aboveFirstApron) {
-    // Above first apron: dollar-for-dollar, can still aggregate
     const maxIncoming = jazzOutTotal
     return {
       valid: otherOutTotal <= maxIncoming,
@@ -94,9 +111,9 @@ export function evaluateTrade(totalPayroll, jazzOutTotal, otherOutTotal, jazzOut
     }
   }
 
-  // Over cap, below first apron — tiered matching
-  const maxIncoming = computeMatchingMax(jazzOutTotal)
-  const ruleLabel = getTierLabel(jazzOutTotal)
+  // Over cap, below first apron — tiered matching (indexed thresholds)
+  const maxIncoming = computeMatchingMax(jazzOutTotal, idx)
+  const ruleLabel = getTierLabel(jazzOutTotal, idx)
   return {
     valid: otherOutTotal <= maxIncoming,
     maxIncoming,
@@ -105,17 +122,19 @@ export function evaluateTrade(totalPayroll, jazzOutTotal, otherOutTotal, jazzOut
   }
 }
 
-/**
- * Tiered matching for teams over the cap, below the first apron (2023 CBA).
- */
-function computeMatchingMax(outgoing) {
-  if (outgoing <= 7_500_000) return outgoing * 2.0 + 250_000
-  if (outgoing <= 29_000_000) return outgoing + 7_500_000
-  return outgoing * 1.25 + 250_000
+function computeMatchingMax(outgoing, { tier1, tier2, flatAdd }) {
+  if (outgoing <= tier1) return outgoing * 2.0 + flatAdd
+  if (outgoing <= tier2) return outgoing + tier1
+  return outgoing * 1.25 + flatAdd
 }
 
-function getTierLabel(outgoing) {
-  if (outgoing <= 7_500_000) return '200% + $250K rule'
-  if (outgoing <= 29_000_000) return 'Outgoing + $7.5M rule'
-  return '125% + $250K rule'
+function getTierLabel(outgoing, { tier1, tier2, flatAdd }) {
+  const t1 = fmtM(tier1)
+  const fa = fmtK(flatAdd)
+  if (outgoing <= tier1) return `200% + ${fa} rule`
+  if (outgoing <= tier2) return `Outgoing + ${t1} rule`
+  return `125% + ${fa} rule`
 }
+
+function fmtM(n) { return `$${(n / 1_000_000).toFixed(1)}M` }
+function fmtK(n) { return n >= 1_000_000 ? fmtM(n) : `$${(n / 1_000).toFixed(0)}K` }

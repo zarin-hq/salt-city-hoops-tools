@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { NON_GUARANTEED, RFA_DECISIONS, TEAM_OPTIONS } from '../../data/jazz-contracts'
+import { NON_GUARANTEED, RFA_DECISIONS, TEAM_OPTIONS, CAP_HOLDS } from '../../data/jazz-contracts'
 import DRAFT_PROSPECTS from '../../data/draft-prospects'
 
 const POSITIONS = ['PG', 'SG', 'SF', 'PF', 'C']
@@ -138,6 +138,16 @@ function buildKeyMoves(state) {
   if (state.draftPick) {
     moves.push({ icon: '+', text: `Drafted ${state.draftPick.name} (#${state.draftPick.pick})` })
   }
+
+  // Bird Rights signings
+  CAP_HOLDS.forEach(p => {
+    const brD = state.birdRightsDecisions?.[p.name]
+    if (brD && brD.decision === 'sign') {
+      moves.push({ icon: '+', text: `Signed ${p.name} (Bird Rights, ${fmt(brD.salary)})` })
+    } else if (state.capHoldDecisions?.[p.name] === 'renounce') {
+      moves.push({ icon: '-', text: `Renounced ${p.name}` })
+    }
+  })
 
   // RFA re-signs
   RFA_DECISIONS.forEach(p => {

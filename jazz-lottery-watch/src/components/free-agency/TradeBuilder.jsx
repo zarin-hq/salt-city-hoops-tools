@@ -51,7 +51,7 @@ export default function TradeBuilder({ state, dispatch, roster, computed }) {
   const jazzOutTotal = trade.jazzOut.reduce((s, p) => s + p.salary, 0)
   const otherOutTotal = trade.otherOut.reduce((s, p) => s + p.salary, 0)
   const hasTradePlayers = trade.jazzOut.length > 0 || trade.otherOut.length > 0
-  const tradeResult = hasTradePlayers ? evaluateTrade(computed.totalPayroll, jazzOutTotal, otherOutTotal) : null
+  const tradeResult = hasTradePlayers ? evaluateTrade(computed.totalPayroll, jazzOutTotal, otherOutTotal, trade.jazzOut.length) : null
 
   return (
     <div className="space-y-3">
@@ -208,6 +208,16 @@ export default function TradeBuilder({ state, dispatch, roster, computed }) {
               <span className="tabular-nums" style={{ color: 'var(--text-muted)' }}>
                 Max incoming: <span className="font-bold" style={{ color: 'var(--sch-black)' }}>{fmt(tradeResult.maxIncoming)}</span>
               </span>
+            </div>
+          )}
+
+          {/* Invalid reason */}
+          {tradeResult && !tradeResult.valid && tradeResult.ruleDetail && (
+            <div className="text-[11px] px-2 py-1.5 rounded" style={{ background: '#fef2f2', color: '#991b1b' }}>
+              {tradeResult.ruleDetail}
+              {tradeResult.maxIncoming > 0 && otherOutTotal > tradeResult.maxIncoming && (
+                <> Incoming salary exceeds max by <span className="font-bold">{fmt(otherOutTotal - tradeResult.maxIncoming)}</span>.</>
+              )}
             </div>
           )}
 

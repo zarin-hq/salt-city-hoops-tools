@@ -1,4 +1,4 @@
-import { GUARANTEED, NON_GUARANTEED, RFA_DECISIONS, TEAM_OPTIONS } from '../../data/jazz-contracts'
+import { GUARANTEED, NON_GUARANTEED, RFA_DECISIONS, TEAM_OPTIONS, CAP_HOLDS } from '../../data/jazz-contracts'
 import useIsMobile from '../../hooks/useIsMobile'
 
 const fmt = n => `$${(n / 1_000_000).toFixed(1)}M`
@@ -86,7 +86,7 @@ export default function CurrentRoster({ state, dispatch }) {
             })}
 
             {/* RFA Re-sign Decisions */}
-            <GroupLabel label="Restricted Free Agents" />
+            {RFA_DECISIONS.length > 0 && <GroupLabel label="Restricted Free Agents" />}
             {RFA_DECISIONS.filter(p => !(state.capHoldDecisions?.[p.name] === 'renounce')).map(p => {
               const d = state.rfaDecisions?.[p.name] || { decision: 'dont_sign', salary: 0 }
               const signed = d.decision === 'resign'
@@ -162,6 +162,95 @@ export default function CurrentRoster({ state, dispatch }) {
                 </tr>
               )
             })}
+
+            {/* Bird Rights signings */}
+            {(() => {
+              const rfaNames = new Set(RFA_DECISIONS.map(p => p.name))
+              const birdPlayers = CAP_HOLDS.filter(p =>
+                state.capHoldDecisions?.[p.name] === 'keep' && !rfaNames.has(p.name)
+              )
+              if (birdPlayers.length === 0) return null
+              return (
+                <>
+                  <GroupLabel label="Bird Rights" />
+                  {birdPlayers.map(p => {
+                    const d = state.birdRightsDecisions?.[p.name] || { decision: 'unsigned', salary: 0 }
+                    const signed = d.decision === 'sign'
+                    return (
+                      <tr
+                        key={p.name}
+                        style={{ borderBottom: '1px solid var(--border)' }}
+                        className="transition-colors"
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = 'var(--sch-smoke)'
+                          const sticky = e.currentTarget.querySelector('[data-sticky]')
+                          if (sticky) sticky.style.background = 'var(--sch-smoke)'
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = ''
+                          const sticky = e.currentTarget.querySelector('[data-sticky]')
+                          if (sticky) sticky.style.background = 'var(--bg-card)'
+                        }}
+                      >
+                        <td data-sticky className="px-3 py-2.5 text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--text)', position: 'sticky', left: 0, zIndex: 2, background: 'var(--bg-card)', boxShadow: '2px 0 4px rgba(0,0,0,0.06)', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div className="flex items-center gap-2">
+                            <PlayerPhoto espnId={p.espnId} name={p.name} />
+                            {isMobile ? shortName(p.name) : p.name}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5 text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                          {p.position}
+                        </td>
+                        <td className="px-3 py-2.5 text-sm text-right tabular-nums font-semibold" style={{ color: 'var(--text)' }}>
+                          {signed && d.salary > 0 ? fmt(d.salary) : '—'}
+                        </td>
+                        <td className="px-3 py-2.5 text-xs text-center font-semibold" style={{ color: signed ? 'var(--sch-teal)' : 'var(--text-muted)' }}>
+                          {signed ? 'Signed' : 'Unsigned'}
+                        </td>
+                        <td className="px-3 py-2.5 text-center">
+                          <div className="inline-flex items-center gap-2">
+                            <SegmentedControl
+                              value={d.decision}
+                              options={[
+                                { value: 'sign', label: 'Sign' },
+                                { value: 'unsigned', label: 'Unsigned' },
+                              ]}
+                              onChange={val => dispatch({
+                                type: 'SET_BIRD_RIGHTS',
+                                player: p.name,
+                                decision: val,
+                                salary: val === 'sign' ? (d.salary || 10_000_000) : 0,
+                              })}
+                            />
+                            {signed && (
+                              <div className="inline-flex items-center gap-1">
+                                <span className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>$</span>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={d.salary > 0 ? +(d.salary / 1_000_000).toFixed(1) : ''}
+                                  onChange={e => dispatch({
+                                    type: 'SET_BIRD_RIGHTS',
+                                    player: p.name,
+                                    decision: 'sign',
+                                    salary: Number(e.target.value) * 1_000_000,
+                                  })}
+                                  placeholder="M"
+                                  className="px-1.5 py-0.5 rounded text-xs tabular-nums w-16"
+                                  style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text)', outline: 'none' }}
+                                />
+                                <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>M/yr</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </>
+              )
+            })()}
           </tbody>
         </table>
       </div>

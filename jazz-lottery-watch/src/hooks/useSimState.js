@@ -21,11 +21,16 @@ function defaultState() {
   const capHoldDecisions = {}
   CAP_HOLDS.forEach(p => { capHoldDecisions[p.name] = 'keep' })
 
+  // Bird rights signings: default unsigned
+  const birdRightsDecisions = {}
+  CAP_HOLDS.forEach(p => { birdRightsDecisions[p.name] = { decision: 'unsigned', salary: 0 } })
+
   return {
     nonGuaranteedDecisions,   // { playerName: 'keep' | 'waive' }
     teamOptionDecisions,      // { playerName: 'exercise' | 'decline' }
     rfaDecisions,             // { playerName: { decision: 'resign' | 'dont_sign', salary: number } }
     capHoldDecisions,         // { playerName: 'keep' | 'renounce' }
+    birdRightsDecisions,      // { playerName: { decision: 'sign' | 'unsigned', salary: number } }
     draftPick: null,          // { pick: number, name: string, salary: number }
     signedFAs: [],            // [{ name, position, salary, signingType: 'mle'|'vet_min'|'custom', age?, team?, type? }]
     trades: [],               // [{ id, jazzOut: [...], otherTeam: string, otherOut: [...] }]
@@ -84,32 +89,33 @@ function reducer(state, action) {
           [action.player]: next,
         },
       }
-      // Cross-link: renouncing Kessler's cap hold forces RFA to "don't sign"
-      if (action.player === 'Walker Kessler' && next === 'renounce') {
-        newState.rfaDecisions = {
-          ...newState.rfaDecisions,
-          'Walker Kessler': { decision: 'dont_sign', salary: 0 },
+      // Renouncing clears any bird rights signing
+      if (next === 'renounce') {
+        newState.birdRightsDecisions = {
+          ...state.birdRightsDecisions,
+          [action.player]: { decision: 'unsigned', salary: 0 },
         }
       }
       return newState
     }
-    case 'SET_RFA_DECISION': {
+    case 'SET_BIRD_RIGHTS': {
       const newState = {
+        ...state,
+        birdRightsDecisions: {
+          ...state.birdRightsDecisions,
+          [action.player]: { decision: action.decision, salary: action.salary || 0 },
+        },
+      }
+      return newState
+    }
+    case 'SET_RFA_DECISION':
+      return {
         ...state,
         rfaDecisions: {
           ...state.rfaDecisions,
           [action.player]: { decision: action.decision, salary: action.salary || 0 },
         },
       }
-      // Cross-link: re-signing Kessler as RFA forces cap hold to "keep"
-      if (action.player === 'Walker Kessler' && action.decision === 'resign') {
-        newState.capHoldDecisions = {
-          ...newState.capHoldDecisions,
-          'Walker Kessler': 'keep',
-        }
-      }
-      return newState
-    }
     case 'SET_DRAFT_PICK':
       return { ...state, draftPick: action.payload }
     case 'SIGN_FA':
@@ -162,7 +168,12 @@ export default function useSimState() {
         const rfaD = state.rfaDecisions?.[p.name]
         const reSignedAsRFA = rfaD && rfaD.decision === 'resign'
         if (!reSignedAsRFA) {
-          totalPayroll += p.capHold
+          const brD = state.birdRightsDecisions?.[p.name]
+          if (brD && brD.decision === 'sign') {
+            totalPayroll += brD.salary // Signed salary replaces cap hold
+          } else {
+            totalPayroll += p.capHold
+          }
         }
       }
     })
@@ -175,10 +186,8 @@ export default function useSimState() {
       }
     })
 
-    // Draft pick salary
-    if (state.draftPick) {
-      totalPayroll += state.draftPick.salary
-    }
+    // Draft pick salary (placeholder $8M if none selected)
+    totalPayroll += state.draftPick ? state.draftPick.salary : 8_000_000
 
     // Signed free agents
     state.signedFAs.forEach(fa => {
@@ -206,7 +215,14 @@ export default function useSimState() {
       const d = state.rfaDecisions?.[p.name]
       if (d && d.decision === 'resign') rosterCount++
     })
-    if (state.draftPick) rosterCount++
+    // Cap holds: count kept players not already counted via RFA re-sign
+    CAP_HOLDS.forEach(p => {
+      if (state.capHoldDecisions[p.name] === 'keep') {
+        const rfaD = state.rfaDecisions?.[p.name]
+        if (!rfaD || rfaD.decision !== 'resign') rosterCount++
+      }
+    })
+    rosterCount++ // Draft pick (selected or placeholder)
     rosterCount += state.signedFAs.length
     // Adjust for trades
     state.trades.forEach(trade => {
@@ -244,6 +260,21 @@ export default function useSimState() {
       }
     })
 
+    // Cap holds: add kept players not already on roster via RFA re-sign
+    CAP_HOLDS.forEach(p => {
+      if (state.capHoldDecisions[p.name] === 'keep') {
+        const rfaD = state.rfaDecisions?.[p.name]
+        if (!rfaD || rfaD.decision !== 'resign') {
+          const brD = state.birdRightsDecisions?.[p.name]
+          if (brD && brD.decision === 'sign') {
+            players.push({ ...p, salary: brD.salary, status: 'signed (Bird Rights)' })
+          } else {
+            players.push({ ...p, salary: p.capHold, status: 'cap hold' })
+          }
+        }
+      }
+    })
+
     if (state.draftPick) {
       players.push({
         name: state.draftPick.name || `2026 Pick #${state.draftPick.pick}`,
@@ -251,6 +282,13 @@ export default function useSimState() {
         salary: state.draftPick.salary,
         status: 'draft pick',
         photo: state.draftPick.photo,
+      })
+    } else {
+      players.push({
+        name: '2026 1st Round Pick',
+        position: '-',
+        salary: 8_000_000,
+        status: 'draft pick (est.)',
       })
     }
 

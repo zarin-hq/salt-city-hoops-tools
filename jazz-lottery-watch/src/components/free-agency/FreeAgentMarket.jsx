@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import FREE_AGENTS from '../../data/free-agents'
-import { CAP_NUMBERS, EXPIRING, getVetMin } from '../../data/jazz-contracts'
+import { CAP_NUMBERS, EXPIRING, CAP_HOLDS, getVetMin } from '../../data/jazz-contracts'
 import useIsMobile from '../../hooks/useIsMobile'
 
 const fmt = n => `$${(n / 1_000_000).toFixed(1)}M`
@@ -63,6 +64,10 @@ export default function FreeAgentMarket({ state, dispatch, computed, waivedPlaye
   // Combine curated list + Jazz expiring + waived players (not already signed)
   const allAgents = useMemo(() => {
     const signedNames = new Set(state.signedFAs.map(fa => fa.name))
+    // Exclude cap hold players that are kept (handled via Bird Rights)
+    const keptCapHolds = new Set(
+      CAP_HOLDS.filter(p => state.capHoldDecisions?.[p.name] === 'keep').map(p => p.name)
+    )
     const agents = [...FREE_AGENTS]
 
     // Add Jazz's own free agents
@@ -79,8 +84,8 @@ export default function FreeAgentMarket({ state, dispatch, computed, waivedPlaye
       }
     })
 
-    return agents.filter(a => !signedNames.has(a.name))
-  }, [state.signedFAs, waivedPlayers])
+    return agents.filter(a => !signedNames.has(a.name) && !keptCapHolds.has(a.name))
+  }, [state.signedFAs, state.capHoldDecisions, waivedPlayers])
 
   function toggleSort(col) {
     if (sortBy === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc')
@@ -325,6 +330,8 @@ export default function FreeAgentMarket({ state, dispatch, computed, waivedPlaye
 function AgentRow({ agent, onSign, isMobile }) {
   const [showMle, setShowMle] = useState(false)
   const [mleSalary, setMleSalary] = useState('')
+  const [hovered, setHovered] = useState(false)
+  const nameRef = useRef(null)
 
   const mleMax = +(CAP_NUMBERS.mle / 1_000_000).toFixed(1)
 
@@ -353,12 +360,57 @@ function AgentRow({ agent, onSign, isMobile }) {
         if (sticky) sticky.style.background = 'var(--bg-card)'
       }}
     >
-      <td data-sticky className="px-3 py-2 text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--text)', position: 'sticky', left: 0, zIndex: 2, background: 'var(--bg-card)', boxShadow: '2px 0 4px rgba(0,0,0,0.06)', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <td
+        ref={nameRef}
+        data-sticky
+        className="px-3 py-2 text-sm font-semibold whitespace-nowrap"
+        style={{ color: 'var(--text)', position: 'sticky', left: 0, zIndex: 2, background: 'var(--bg-card)', boxShadow: '2px 0 4px rgba(0,0,0,0.06)', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
         <div className="flex items-center gap-2">
           <PlayerPhoto espnId={agent.espnId} name={agent.name} />
           {isMobile ? shortName(agent.name) : agent.name}
         </div>
       </td>
+      {hovered && agent.stats && nameRef.current && createPortal(
+        (() => {
+          const rect = nameRef.current.getBoundingClientRect()
+          return (
+            <div
+              className="rounded-lg"
+              style={{
+                position: 'fixed',
+                zIndex: 9999,
+                top: rect.bottom + 2,
+                left: rect.left + 8,
+                width: 180, padding: '8px 10px',
+                background: 'var(--sch-black)', color: 'white',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+                pointerEvents: 'none',
+              }}
+            >
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                2024-25 Stats
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {[
+                  ['PPG', agent.stats.ppg.toFixed(1)],
+                  ['RPG', agent.stats.rpg.toFixed(1)],
+                  ['APG', agent.stats.apg.toFixed(1)],
+                  ['3P%', agent.stats.tpPct != null ? `${agent.stats.tpPct.toFixed(1)}%` : '—'],
+                ].map(([label, val]) => (
+                  <div key={label} className="flex items-baseline justify-between">
+                    <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.5)' }}>{label}</span>
+                    <span className="text-xs font-bold tabular-nums">{val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })(),
+        document.body
+      )}
       <td className="px-3 py-2 text-xs text-center" style={{ color: 'var(--text-muted)' }}>{agent.position}</td>
       <td className="px-3 py-2 text-xs text-center tabular-nums" style={{ color: 'var(--text-muted)' }}>{agent.age || '—'}</td>
       <td className="px-3 py-2 text-xs text-center" style={{ color: 'var(--text-muted)' }}>{agent.team}</td>

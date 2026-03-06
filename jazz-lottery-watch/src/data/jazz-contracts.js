@@ -5,7 +5,7 @@ export const CAP_NUMBERS = {
   salaryCap: 166_000_000,
   luxuryTax: 200_000_000,
   firstApron: 209_000_000,
-  secondApron: 220_000_000,
+  secondApron: 222_000_000,
   mle: 15_139_000,
 }
 
@@ -51,12 +51,10 @@ export const CAP_HOLDS = [
   { name: 'Walker Kessler',  espnId: '4433136', position: 'C',  age: 25, capHold: 14_636_814, qo: 7_064_702, rights: 'Restricted Bird' },
   { name: 'Kevin Love',      espnId: '3449',    position: 'C',  age: 38, capHold: 7_885_000,  qo: null,      rights: 'Bird' },
   { name: 'Oscar Tshiebwe',  espnId: '4433218', position: 'PF', age: 27, capHold: 2_198_879,  qo: 2_198_879, rights: 'Two-Way' },
-  { name: 'Elijah Harkless', espnId: '5105574', position: 'PG', age: 26, capHold: 2_198_879,  qo: 2_198_879, rights: 'Two-Way' },
+  { name: 'Elijah Harkless', espnId: '4397449', position: 'PG', age: 26, capHold: 2_198_879,  qo: 2_198_879, rights: 'Two-Way' },
 ]
 
-export const RFA_DECISIONS = [
-  { name: 'Walker Kessler', espnId: '4433136', position: 'C', qualifyingOffer: 7_064_702, faType: 'RFA', note: 'Restricted free agent — re-sign or let walk' },
-]
+export const RFA_DECISIONS = []
 
 export const TEAM_OPTIONS = []
 

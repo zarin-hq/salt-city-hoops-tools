@@ -2,6 +2,11 @@ import { useState } from 'react'
 import { evaluateTrade } from '../../data/trade-rules'
 
 const fmt = n => `$${(n / 1_000_000).toFixed(1)}M`
+const fmtPrecise = n => {
+  const m = n / 1_000_000
+  if (Math.abs(m) < 0.1) return `$${(n / 1_000).toFixed(0)}K`
+  return `$${m.toFixed(2)}M`
+}
 
 const EMPTY_TRADE = {
   otherTeam: '',
@@ -206,7 +211,7 @@ export default function TradeBuilder({ state, dispatch, roster, computed }) {
             <div className="flex items-center justify-between text-[11px]">
               <span style={{ color: 'var(--text-muted)' }}>{tradeResult.ruleLabel}</span>
               <span className="tabular-nums" style={{ color: 'var(--text-muted)' }}>
-                Max incoming: <span className="font-bold" style={{ color: 'var(--sch-black)' }}>{fmt(tradeResult.maxIncoming)}</span>
+                Max incoming: <span className="font-bold" style={{ color: 'var(--sch-black)' }}>{fmtPrecise(tradeResult.maxIncoming)}</span>
               </span>
             </div>
           )}
@@ -216,7 +221,7 @@ export default function TradeBuilder({ state, dispatch, roster, computed }) {
             <div className="text-[11px] px-2 py-1.5 rounded" style={{ background: '#fef2f2', color: '#991b1b' }}>
               {tradeResult.ruleDetail}
               {tradeResult.maxIncoming > 0 && otherOutTotal > tradeResult.maxIncoming && (
-                <> Incoming salary exceeds max by <span className="font-bold">{fmt(otherOutTotal - tradeResult.maxIncoming)}</span>.</>
+                <> Incoming salary exceeds max by <span className="font-bold">{fmtPrecise(otherOutTotal - tradeResult.maxIncoming)}</span>.</>
               )}
             </div>
           )}
@@ -236,8 +241,8 @@ export default function TradeBuilder({ state, dispatch, roster, computed }) {
                 />
               </div>
               <div className="flex justify-between text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>
-                <span className="tabular-nums">{fmt(otherOutTotal)} incoming</span>
-                <span className="tabular-nums">{fmt(tradeResult.maxIncoming)} max</span>
+                <span className="tabular-nums">{fmtPrecise(otherOutTotal)} incoming</span>
+                <span className="tabular-nums">{fmtPrecise(tradeResult.maxIncoming)} max</span>
               </div>
             </div>
           )}

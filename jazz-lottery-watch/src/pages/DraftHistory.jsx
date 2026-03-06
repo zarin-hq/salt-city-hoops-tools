@@ -5,16 +5,29 @@ import { LayoutConfig } from '../components/Layout'
 
 const headshotUrl = id => `https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${id}.png&w=96&h=70`
 
-function PlayerPhoto({ espnId, name, size = 28 }) {
-  const [failed, setFailed] = useState(false)
-  if (espnId && !failed) {
+function PlayerPhoto({ espnId, name, photoUrl, size = 28 }) {
+  const [espnFailed, setEspnFailed] = useState(false)
+  const [altFailed, setAltFailed] = useState(false)
+
+  if (espnId && !espnFailed) {
     return (
       <img
         src={headshotUrl(espnId)}
         alt=""
         className="rounded-full flex-shrink-0"
         style={{ width: size, height: size, objectFit: 'cover' }}
-        onError={() => setFailed(true)}
+        onError={() => setEspnFailed(true)}
+      />
+    )
+  }
+  if (photoUrl && !altFailed) {
+    return (
+      <img
+        src={photoUrl}
+        alt=""
+        className="rounded-full flex-shrink-0"
+        style={{ width: size, height: size, objectFit: 'cover' }}
+        onError={() => setAltFailed(true)}
       />
     )
   }
@@ -258,7 +271,7 @@ export default function DraftHistory() {
                       <td className="px-3 py-2 font-mono font-bold" style={{ color: 'var(--text)' }}>{p.pick}</td>
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
-                          <PlayerPhoto espnId={p.espnId} name={p.name} size={28} />
+                          <PlayerPhoto espnId={p.espnId} name={p.name} photoUrl={p.photoUrl} size={28} />
                           <div>
                             <span className="font-semibold" style={{ color: 'var(--text)' }}>{p.name}</span>
                             <span className="text-[10px] ml-1.5" style={{ color: 'var(--text-faint)' }}>{p.position}</span>
@@ -303,7 +316,7 @@ export default function DraftHistory() {
                     <TierBadge tier={p.peakTier} />
                   </div>
                   <div className="flex items-center gap-2">
-                    <PlayerPhoto espnId={p.espnId} name={p.name} size={32} />
+                    <PlayerPhoto espnId={p.espnId} name={p.name} photoUrl={p.photoUrl} size={32} />
                     <div>
                       <div className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{p.name}</div>
                       <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -598,7 +611,7 @@ function InterestingStats() {
               <div>
                 <div className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-faint)' }}>Shortest</div>
                 <div className="flex items-center gap-2">
-                  <PlayerPhoto espnId={stats.shortest.espnId} name={stats.shortest.name} size={24} />
+                  <PlayerPhoto espnId={stats.shortest.espnId} name={stats.shortest.name} photoUrl={stats.shortest.photoUrl} size={24} />
                   <div>
                     <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{stats.shortest.name}</span>
                     <span className="text-xs font-mono font-bold ml-1.5" style={{ color: 'var(--accent)' }}>{stats.shortest.height}</span>
@@ -608,7 +621,7 @@ function InterestingStats() {
               <div>
                 <div className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-faint)' }}>Tallest</div>
                 <div className="flex items-center gap-2">
-                  <PlayerPhoto espnId={stats.tallest.espnId} name={stats.tallest.name} size={24} />
+                  <PlayerPhoto espnId={stats.tallest.espnId} name={stats.tallest.name} photoUrl={stats.tallest.photoUrl} size={24} />
                   <div>
                     <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{stats.tallest.name}</span>
                     <span className="text-xs font-mono font-bold ml-1.5" style={{ color: 'var(--accent)' }}>{stats.tallest.height}</span>
@@ -636,7 +649,7 @@ function InterestingStats() {
               <div key={label} className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-[10px] font-bold uppercase w-7 flex-shrink-0" style={{ color: 'var(--text-faint)' }}>{label}</span>
-                  <PlayerPhoto espnId={player.espnId} name={player.name} size={20} />
+                  <PlayerPhoto espnId={player.espnId} name={player.name} photoUrl={player.photoUrl} size={20} />
                   <span className="text-xs font-semibold truncate" style={{ color: 'var(--text)' }}>{player.name}</span>
                 </div>
                 <span className="text-xs font-bold font-mono flex-shrink-0 ml-2" style={{ color: 'var(--text)' }}>

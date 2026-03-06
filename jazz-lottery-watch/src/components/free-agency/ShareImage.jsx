@@ -143,7 +143,8 @@ function buildKeyMoves(state) {
   CAP_HOLDS.forEach(p => {
     const brD = state.birdRightsDecisions?.[p.name]
     if (brD && brD.decision === 'sign') {
-      moves.push({ icon: '+', text: `Signed ${p.name} (Bird Rights, ${fmt(brD.salary)})` })
+      const label = p.name === 'Walker Kessler' ? 'RFA' : 'Bird Rights'
+      moves.push({ icon: '+', text: `Signed ${p.name} (${label}, ${fmt(brD.salary)})` })
     } else if (state.capHoldDecisions?.[p.name] === 'renounce') {
       moves.push({ icon: '-', text: `Renounced ${p.name}` })
     }

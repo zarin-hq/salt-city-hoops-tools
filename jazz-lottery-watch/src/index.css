@@ -151,6 +151,14 @@ select {
   opacity: 0.7;
 }
 
+/* Binder pocket hover */
+.binder-pocket {
+  transition: transform 0.2s ease;
+}
+.binder-pocket:hover {
+  transform: translateY(-5px);
+}
+
 /* 3D card mobile scaling */
 @media (max-width: 639px) {
   .prospect-card-3d-wrap {

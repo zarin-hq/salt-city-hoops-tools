@@ -320,9 +320,18 @@ export default function DraftGuide() {
 
         {/* Views */}
         {viewMode === 'list' ? (
-          <div className="grid grid-cols-1 gap-10">
+          <div className="flex flex-col gap-10">
             {filtered.map((p, i) => (
-              <ProspectCard key={p.rank} prospect={p} index={i} />
+              <div key={p.rank}>
+                <ProspectCard prospect={p} index={i} />
+                {i < filtered.length - 1 && (
+                  <img
+                    src="/squiggle-divider.svg"
+                    alt=""
+                    style={{ width: '40%', margin: '72px auto 32px' }}
+                  />
+                )}
+              </div>
             ))}
           </div>
         ) : (

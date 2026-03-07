@@ -107,6 +107,13 @@ function PocketSlot({ prospect, index, onCardClick }) {
     return () => ro.disconnect()
   }, [])
 
+  const p = BADGE_PLACEMENTS[index % BADGE_PLACEMENTS.length]
+  const badgePos = {}
+  if (p.top != null) badgePos.top = p.top
+  if (p.bottom != null) badgePos.bottom = p.bottom
+  if (p.left != null) badgePos.left = p.left
+  if (p.right != null) badgePos.right = p.right
+
   return (
     <div
       ref={containerRef}
@@ -114,61 +121,59 @@ function PocketSlot({ prospect, index, onCardClick }) {
         position: 'relative',
         width: '100%',
         height: '100%',
-        overflow: 'hidden',
         cursor: 'pointer',
       }}
       onClick={() => onCardClick(prospect)}
     >
-      {/* Scaled card centered in pocket */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        pointerEvents: 'none',
-      }}>
+      {/* Card — translates on hover */}
+      <div
+        className="binder-pocket"
+        style={{
+          position: 'absolute', inset: 0,
+          overflow: 'hidden',
+        }}
+      >
         <div style={{
-          width: BASE_W, height: BASE_H,
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
         }}>
-          <ProspectCard3D
-            prospect={prospect}
-            bgColor={bgColor}
-            holo={prospect.rank <= 4}
-            holoIntensity={1.15}
-            flat
-            width={BASE_W}
-            height={BASE_H}
-          />
+          <div style={{
+            width: BASE_W, height: BASE_H,
+            transform: `scale(${scale})`,
+            transformOrigin: 'center center',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+          }}>
+            <ProspectCard3D
+              prospect={prospect}
+              bgColor={bgColor}
+              holo={prospect.rank <= 4}
+              holoIntensity={1.15}
+              flat
+              width={BASE_W}
+              height={BASE_H}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Rank badge — sticker style */}
-      {(() => {
-        const p = BADGE_PLACEMENTS[index % BADGE_PLACEMENTS.length]
-        const pos = {}
-        if (p.top != null) pos.top = p.top
-        if (p.bottom != null) pos.bottom = p.bottom
-        if (p.left != null) pos.left = p.left
-        if (p.right != null) pos.right = p.right
-        return (
-          <div style={{
-            position: 'absolute', ...pos,
-            width: 30, height: 30, borderRadius: '50%',
-            background: STICKER_COLORS[index % STICKER_COLORS.length],
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 2,
-            transform: `rotate(${p.rotate}deg)`,
-          }}>
-            <span style={{
-              fontFamily: "'Permanent Marker', cursive",
-              fontSize: 14, color: '#000', lineHeight: 1,
-            }}>
-              {prospect.rank}
-            </span>
-          </div>
-        )
-      })()}
+      {/* Rank badge — stays in place on hover */}
+      <div style={{
+        position: 'absolute', ...badgePos,
+        width: 30, height: 30, borderRadius: '50%',
+        background: STICKER_COLORS[index % STICKER_COLORS.length],
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 2,
+        transform: `rotate(${p.rotate}deg)`,
+        pointerEvents: 'none',
+      }}>
+        <span style={{
+          fontFamily: "'Permanent Marker', cursive",
+          fontSize: 14, color: '#000', lineHeight: 1,
+        }}>
+          {prospect.rank}
+        </span>
+      </div>
     </div>
   )
 }

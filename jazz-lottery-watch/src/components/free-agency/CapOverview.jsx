@@ -9,6 +9,7 @@ const fmt = n => {
   if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(0)}K`
   return `$${n.toLocaleString()}`
 }
+const fmtRound = n => `$${Math.round(n / 1_000_000)}M`
 
 export default function CapOverview({ computed }) {
   const { totalPayroll, capSpace, taxSpace, rosterCount, emptyRosterHolds, rosterHoldTotal, hardCap, hardCapTriggers } = computed
@@ -65,13 +66,13 @@ export default function CapOverview({ computed }) {
         </div>
         {/* Labels below */}
         <div className="relative mt-1" style={{ height: 24 }}>
-          <CapLabel left={capLinePct} label="Cap" value={fmt(salaryCap)} tip="The salary cap is the soft limit on team spending. Teams can exceed it using exceptions like Bird rights, the MLE, and vet minimums." />
-          <CapLabel left={taxLinePct} label="Tax" value={fmt(luxuryTax)} tip="The luxury tax threshold. Teams exceeding this line pay a progressive tax penalty on every dollar over." />
-          <span className="hidden sm:inline"><CapLabel left={apron1Pct} label="1st" value={fmt(firstApron)} tip="The first apron restricts teams from using certain exceptions and limits trade flexibility." /></span>
-          <span className="hidden sm:inline"><CapLabel left={apron2Pct} label="2nd" value={fmt(secondApron)} tip="The second (hard) apron imposes the strictest restrictions — teams above this cannot aggregate salaries in trades, use the bi-annual exception, or send cash in trades." /></span>
+          <CapLabel left={capLinePct} label="Cap" value={fmtRound(salaryCap)} tip="The salary cap is the soft limit on team spending. Teams can exceed it using exceptions like Bird rights, the MLE, and vet minimums." />
+          <CapLabel left={taxLinePct} label="Tax" value={fmtRound(luxuryTax)} tip="The luxury tax threshold. Teams exceeding this line pay a progressive tax penalty on every dollar over." />
+          <span className="hidden sm:inline"><CapLabel left={apron1Pct} label="1st" value={fmtRound(firstApron)} tip="The first apron restricts teams from using certain exceptions and limits trade flexibility." /></span>
+          <span className="hidden sm:inline"><CapLabel left={apron2Pct} label="2nd" value={fmtRound(secondApron)} tip="The second (hard) apron imposes the strictest restrictions — teams above this cannot aggregate salaries in trades, use the bi-annual exception, or send cash in trades." /></span>
           {hardCapPct && (
             <span className="hidden sm:inline">
-              <CapLabel left={hardCapPct} label="Hard" value={fmt(hardCap)} isHardCap tip={`Hard-capped at ${fmt(hardCap)}. Payroll cannot exceed this threshold.`} />
+              <CapLabel left={hardCapPct} label="Hard" value={fmtRound(hardCap)} isHardCap tip={`Hard-capped at ${fmt(hardCap)}. Payroll cannot exceed this threshold.`} />
             </span>
           )}
         </div>

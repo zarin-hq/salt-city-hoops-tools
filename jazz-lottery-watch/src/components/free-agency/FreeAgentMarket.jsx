@@ -113,7 +113,10 @@ export default function FreeAgentMarket({ state, dispatch, computed, waivedPlaye
   function signPlayer(player, signingType, customSalary) {
     let salary = player.estimatedSalary
     if (signingType === 'vet_min') salary = getVetMin(player.yearsExp ?? 3)
-    else if (signingType === 'mle') salary = customSalary || Math.min(player.estimatedSalary, CAP_NUMBERS.mle)
+    else if (signingType === 'mle') {
+      const mleLeft = Math.max(0, CAP_NUMBERS.mle - computed.totalMLE)
+      salary = customSalary || Math.min(player.estimatedSalary, mleLeft)
+    }
 
     dispatch({
       type: 'SIGN_FA',
@@ -333,7 +336,8 @@ function AgentRow({ agent, onSign, isMobile, computed }) {
   const [hovered, setHovered] = useState(false)
   const nameRef = useRef(null)
 
-  const mleMax = +(CAP_NUMBERS.mle / 1_000_000).toFixed(1)
+  const mleRemaining = Math.max(0, CAP_NUMBERS.mle - (computed.totalMLE || 0))
+  const mleRemainingM = +(mleRemaining / 1_000_000).toFixed(1)
 
   // Hard cap check for MLE signing
   const mleSalaryNum = Number(mleSalary) * 1_000_000 || 0
@@ -349,11 +353,13 @@ function AgentRow({ agent, onSign, isMobile, computed }) {
     projectedHardCap = CAP_NUMBERS.firstApron
   }
   const projectedPayroll = computed.totalPayroll + mleSalaryNum
-  const mleWouldViolateHardCap = showMle && mleSalaryNum > 0 && projectedHardCap && projectedPayroll > projectedHardCap
+  const mleWouldExceed = showMle && mleSalaryNum > 0 && mleSalaryNum > mleRemaining
+  const mleWouldViolateHardCap = showMle && mleSalaryNum > 0 && !mleWouldExceed && projectedHardCap && projectedPayroll > projectedHardCap
+  const mleBlocked = mleWouldExceed || mleWouldViolateHardCap
 
   function handleMleClick() {
     setShowMle(true)
-    setMleSalary(mleMax)
+    setMleSalary(mleRemainingM)
   }
 
   function handleMleSign() {
@@ -453,22 +459,22 @@ function AgentRow({ agent, onSign, isMobile, computed }) {
                   step="0.1"
                   min="0"
                   value={mleSalary}
-                  onChange={e => { const v = e.target.value; setMleSalary(v === '' ? '' : Math.min(Number(v), mleMax)) }}
-                  max={mleMax}
+                  onChange={e => { const v = e.target.value; setMleSalary(v === '' ? '' : Math.min(Number(v), mleRemainingM)) }}
+                  max={mleRemainingM}
                   placeholder="M"
                   className="px-1.5 py-0.5 rounded text-xs tabular-nums w-16"
-                  style={{ background: 'var(--bg-raised)', border: mleWouldViolateHardCap ? '1px solid #ef4444' : '1px solid var(--border)', color: 'var(--text)', outline: 'none' }}
+                  style={{ background: 'var(--bg-raised)', border: mleBlocked ? '1px solid #ef4444' : '1px solid var(--border)', color: 'var(--text)', outline: 'none' }}
                 />
                 <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>M</span>
                 <button
                   onClick={handleMleSign}
-                  disabled={mleWouldViolateHardCap}
+                  disabled={mleBlocked}
                   className="text-[10px] font-bold px-3 py-1 rounded btn-dark"
                   style={{
-                    background: mleWouldViolateHardCap ? '#fca5a5' : 'var(--sch-black)',
-                    color: mleWouldViolateHardCap ? '#991b1b' : 'white',
+                    background: mleBlocked ? '#fca5a5' : 'var(--sch-black)',
+                    color: mleBlocked ? '#991b1b' : 'white',
                     border: 'none',
-                    cursor: mleWouldViolateHardCap ? 'not-allowed' : 'pointer',
+                    cursor: mleBlocked ? 'not-allowed' : 'pointer',
                   }}
                 >
                   Sign
@@ -481,9 +487,9 @@ function AgentRow({ agent, onSign, isMobile, computed }) {
                   ×
                 </button>
               </div>
-              {mleWouldViolateHardCap && (
+              {mleBlocked && (
                 <span className="text-[9px] font-semibold" style={{ color: '#dc2626' }}>
-                  Exceeds hard cap ({fmt(projectedHardCap)})
+                  {mleWouldExceed ? `Exceeds MLE (${fmt(mleRemaining)} left)` : `Exceeds hard cap (${fmt(projectedHardCap)})`}
                 </span>
               )}
             </div>
@@ -498,8 +504,9 @@ function AgentRow({ agent, onSign, isMobile, computed }) {
               </button>
               <button
                 onClick={handleMleClick}
-                className="text-[10px] font-bold uppercase px-2 rounded cursor-pointer inline-flex items-center justify-center btn-secondary"
-                style={{ background: 'var(--bg-raised)', color: 'var(--text-muted)', border: '1px solid var(--border)', height: 24, lineHeight: 1 }}
+                disabled={mleRemaining <= 0}
+                className="text-[10px] font-bold uppercase px-2 rounded inline-flex items-center justify-center btn-secondary"
+                style={{ background: 'var(--bg-raised)', color: mleRemaining <= 0 ? 'var(--text-faint)' : 'var(--text-muted)', border: '1px solid var(--border)', height: 24, lineHeight: 1, cursor: mleRemaining <= 0 ? 'not-allowed' : 'pointer', opacity: mleRemaining <= 0 ? 0.5 : 1 }}
               >
                 + MLE
               </button>

@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { LayoutConfig } from '../components/Layout'
 import DRAFT_GUIDE_PROSPECTS from '../data/draft-guide-prospects'
 import ProspectCard3D from '../components/ProspectCard3D'
+import BinderView from '../components/BinderView'
+import CardLightbox from '../components/CardLightbox'
 
 const POSITION_COLORS = {
   PG: { color: '#1d4ed8', bg: '#dbeafe' },
@@ -113,14 +115,14 @@ function ProspectCard({ prospect, index }) {
   const bgColor = PHOTO_BG_COLORS[index % PHOTO_BG_COLORS.length]
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 items-start mx-auto" style={{ width: 'fit-content' }}>
+    <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-center lg:items-start mx-auto" style={{ width: 'fit-content', maxWidth: '100%' }}>
       {/* 3D Card column */}
       <div className="flex-shrink-0 self-center lg:self-start lg:sticky" style={{ top: 24 }}>
         <ProspectCard3D prospect={prospect} bgColor={bgColor} holo={prospect.rank <= 4} />
       </div>
 
       {/* Content box column */}
-      <div className="relative min-w-0" style={{ paddingRight: 32, width: 480 }}>
+      <div className="relative min-w-0 w-full lg:w-[480px]" style={{ paddingRight: 32 }}>
       {/* Rank circle overlapping right edge */}
       <div
         className="rounded-full flex items-center justify-center absolute"
@@ -141,12 +143,12 @@ function ProspectCard({ prospect, index }) {
         boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
       }}
     >
-      <div style={{ padding: 32 }}>
+      <div className="p-4 sm:p-8">
 
       {/* Name / school / measurables */}
       <div className="mb-6 text-center">
         <div className="flex items-center justify-center gap-2">
-          <div className="font-bold leading-tight" style={{ fontFamily: "'Archivo Black', Arial, sans-serif", color: 'var(--text)', fontSize: 32 }}>
+          <div className="font-bold leading-tight text-xl sm:text-[32px]" style={{ fontFamily: "'Archivo Black', Arial, sans-serif", color: 'var(--text)' }}>
             {prospect.name}
           </div>
           <span
@@ -175,7 +177,7 @@ function ProspectCard({ prospect, index }) {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-6 mb-6" style={{ gap: 12 }}>
+      <div className="grid grid-cols-3 sm:grid-cols-6 mb-6" style={{ gap: 8 }}>
         <StatCell label="PPG" value={prospect.stats.ppg} />
         <StatCell label="RPG" value={prospect.stats.rpg} />
         <StatCell label="APG" value={prospect.stats.apg} />
@@ -235,8 +237,40 @@ function ProspectCard({ prospect, index }) {
 
 /* ── DraftGuide (page) ───────────────────────────────────── */
 
+/* ── View Toggle Icons ──────────────────────────────────── */
+
+function ListIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <line x1="1" y1="3" x2="15" y2="3" />
+      <line x1="1" y1="8" x2="15" y2="8" />
+      <line x1="1" y1="13" x2="15" y2="13" />
+    </svg>
+  )
+}
+
+function GridIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" stroke="none">
+      <rect x="1.5" y="1.5" width="3" height="3" rx="0.5" />
+      <rect x="6.5" y="1.5" width="3" height="3" rx="0.5" />
+      <rect x="11.5" y="1.5" width="3" height="3" rx="0.5" />
+      <rect x="1.5" y="6.5" width="3" height="3" rx="0.5" />
+      <rect x="6.5" y="6.5" width="3" height="3" rx="0.5" />
+      <rect x="11.5" y="6.5" width="3" height="3" rx="0.5" />
+      <rect x="1.5" y="11.5" width="3" height="3" rx="0.5" />
+      <rect x="6.5" y="11.5" width="3" height="3" rx="0.5" />
+      <rect x="11.5" y="11.5" width="3" height="3" rx="0.5" />
+    </svg>
+  )
+}
+
+/* ── DraftGuide (page) ───────────────────────────────────── */
+
 export default function DraftGuide() {
   const [posFilter, setPosFilter] = useState('All')
+  const [viewMode, setViewMode] = useState('binder')
+  const [selectedProspect, setSelectedProspect] = useState(null)
 
   useEffect(() => { document.title = 'Draft Guide | Salt City Hoops' }, [])
 
@@ -250,21 +284,63 @@ export default function DraftGuide() {
   return (
     <>
       <LayoutConfig title="2026 Draft Guide" />
-      <div style={{ background: '#f3f4f6', minHeight: '100vh' }}>
+      <div style={{ background: '#ffffff', minHeight: '100vh' }}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        {/* Filter bar */}
-        <div className="mb-5 flex justify-center">
-          <FilterGroup label="" options={POSITIONS} value={posFilter} onChange={setPosFilter} />
+        {/* Toggle bar */}
+        <div className="mb-3 flex justify-center">
+          <div className="flex items-center gap-1" style={{ border: '1px solid var(--border)', borderRadius: 6, padding: 2 }}>
+            {[
+              { mode: 'binder', Icon: GridIcon, label: 'Binder view' },
+              { mode: 'list', Icon: ListIcon, label: 'List view' },
+            ].map(({ mode, Icon, label }) => (
+              <button
+                key={mode}
+                title={label}
+                onClick={() => setViewMode(mode)}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 32, height: 28, borderRadius: 4, border: 'none', cursor: 'pointer',
+                  background: viewMode === mode ? 'var(--sch-black)' : 'transparent',
+                  color: viewMode === mode ? '#fff' : 'var(--text-muted)',
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+              >
+                <Icon />
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Prospect grid */}
-        <div className="grid grid-cols-1 gap-10">
-          {filtered.map((p, i) => (
-            <ProspectCard key={p.rank} prospect={p} index={i} />
-          ))}
-        </div>
+        {/* Position filter — only in list view */}
+        {viewMode === 'list' && (
+          <div className="mb-5 flex justify-center">
+            <FilterGroup label="" options={POSITIONS} value={posFilter} onChange={setPosFilter} />
+          </div>
+        )}
+
+        {/* Views */}
+        {viewMode === 'list' ? (
+          <div className="grid grid-cols-1 gap-10">
+            {filtered.map((p, i) => (
+              <ProspectCard key={p.rank} prospect={p} index={i} />
+            ))}
+          </div>
+        ) : (
+          <BinderView
+            prospects={DRAFT_GUIDE_PROSPECTS}
+            onCardClick={setSelectedProspect}
+          />
+        )}
       </div>
       </div>
+
+      {/* Lightbox */}
+      {selectedProspect && (
+        <CardLightbox
+          prospect={selectedProspect}
+          onClose={() => setSelectedProspect(null)}
+        />
+      )}
     </>
   )
 }

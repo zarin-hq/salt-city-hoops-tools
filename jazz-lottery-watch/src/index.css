@@ -150,3 +150,27 @@ select {
 .btn-link:hover {
   opacity: 0.7;
 }
+
+/* 3D card mobile scaling */
+@media (max-width: 639px) {
+  .prospect-card-3d-wrap {
+    transform: scale(0.8);
+    transform-origin: top center;
+    margin-bottom: -60px; /* compensate for scale whitespace */
+  }
+
+  /* Lightbox mobile adjustments */
+  .lightbox-center {
+    padding: 12px !important;
+    align-items: flex-start !important;
+  }
+
+  .lightbox-card-wrap {
+    overflow: hidden !important;
+  }
+
+  .lightbox-card-wrap .prospect-card-3d-wrap {
+    transform: scale(0.75);
+    margin-bottom: -80px;
+  }
+}

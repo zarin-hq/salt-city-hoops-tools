@@ -12,13 +12,14 @@ const SCHOOL_LOGO_IDS = {
 
 /* ── Front Face ───────────────────────────────────────────── */
 
-function CardFront({ prospect, bgColor, holo, rot }) {
+function CardFront({ prospect, bgColor, holo, rot, holoIntensity = 1 }) {
   const [imgFailed, setImgFailed] = useState(false)
   const initials = (prospect.name || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   // Holo gradient shifts angle and position based on card rotation
   const holoAngle = 135 + (rot?.y || 0) * 1.5 + (rot?.x || 0) * 0.5
   const holoPos = 50 + (rot?.y || 0) * 0.8
+  const hi = holoIntensity
 
   return (
     <div
@@ -53,13 +54,13 @@ function CardFront({ prospect, bgColor, holo, rot }) {
           <div style={{
             position: 'absolute', inset: 0, pointerEvents: 'none',
             background: `linear-gradient(${holoAngle}deg,
-              rgba(255,0,0,0.28) ${holoPos - 40}%,
-              rgba(255,165,0,0.25) ${holoPos - 25}%,
-              rgba(255,255,0,0.28) ${holoPos - 10}%,
-              rgba(0,255,0,0.25) ${holoPos}%,
-              rgba(0,200,255,0.28) ${holoPos + 10}%,
-              rgba(100,0,255,0.25) ${holoPos + 25}%,
-              rgba(255,0,200,0.28) ${holoPos + 40}%)`,
+              rgba(255,0,0,${0.28 * hi}) ${holoPos - 40}%,
+              rgba(255,165,0,${0.25 * hi}) ${holoPos - 25}%,
+              rgba(255,255,0,${0.28 * hi}) ${holoPos - 10}%,
+              rgba(0,255,0,${0.25 * hi}) ${holoPos}%,
+              rgba(0,200,255,${0.28 * hi}) ${holoPos + 10}%,
+              rgba(100,0,255,${0.25 * hi}) ${holoPos + 25}%,
+              rgba(255,0,200,${0.28 * hi}) ${holoPos + 40}%)`,
             mixBlendMode: 'screen',
           }} />
         )}
@@ -68,7 +69,7 @@ function CardFront({ prospect, bgColor, holo, rot }) {
             position: 'absolute', inset: 0, pointerEvents: 'none',
             background: `linear-gradient(${holoAngle + 60}deg,
               transparent ${holoPos - 30}%,
-              rgba(255,255,255,0.35) ${holoPos}%,
+              rgba(255,255,255,${0.35 * hi}) ${holoPos}%,
               transparent ${holoPos + 25}%)`,
             mixBlendMode: 'overlay',
           }} />
@@ -254,43 +255,58 @@ function CardEdges() {
 
 /* ── Main 3D Card Component ───────────────────────────────── */
 
-export default function ProspectCard3D({ prospect, bgColor = '#000', holo = false }) {
-  const [rot, setRot] = useState({ x: 0, y: 0 })
+export default function ProspectCard3D({ prospect, bgColor = '#000', holo = false, holoIntensity = 1, flat = false, width, height, onClick }) {
+  const cardW = width || CARD_W
+  const cardH = height || CARD_H
+  const scaleX = cardW / CARD_W
+  const scaleY = cardH / CARD_H
+
+  const defaultRot = { x: 5, y: 12 }
+  const [rot, setRot] = useState(defaultRot)
   const [dragging, setDragging] = useState(false)
   const dragRef = useRef(null)
   const cardRef = useRef(null)
 
   const onPointerDown = useCallback((e) => {
+    if (flat) return
     e.preventDefault()
     setDragging(true)
     dragRef.current = { startX: e.clientX, startY: e.clientY, startRot: { ...rot } }
     cardRef.current?.setPointerCapture(e.pointerId)
-  }, [rot])
+  }, [rot, flat])
 
   const onPointerMove = useCallback((e) => {
-    if (!dragging || !dragRef.current) return
+    if (flat || !dragging || !dragRef.current) return
     const dx = e.clientX - dragRef.current.startX
     const dy = e.clientY - dragRef.current.startY
     setRot({
       x: dragRef.current.startRot.x - dy * 0.5,
       y: dragRef.current.startRot.y + dx * 0.5,
     })
-  }, [dragging])
+  }, [dragging, flat])
 
   const onPointerUp = useCallback((e) => {
+    if (flat) return
     setDragging(false)
     dragRef.current = null
     cardRef.current?.releasePointerCapture(e.pointerId)
-  }, [])
+  }, [flat])
 
   const resetCard = useCallback(() => {
-    setRot({ x: 0, y: 0 })
+    setRot(defaultRot)
   }, [])
 
+  const flatRot = { x: 0, y: 0 }
+  const activeRot = flat ? flatRot : rot
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, userSelect: 'none' }}>
+    <div
+      className="prospect-card-3d-wrap"
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: flat ? 0 : 8, userSelect: 'none' }}
+      onClick={flat && onClick ? onClick : undefined}
+    >
       {/* Perspective wrapper */}
-      <div style={{ perspective: 1200, width: CARD_W, height: CARD_H }}>
+      <div style={{ perspective: flat ? 'none' : 1200, width: cardW, height: cardH, overflow: flat ? 'hidden' : 'visible' }}>
         {/* Rotating card */}
         <div
           ref={cardRef}
@@ -298,26 +314,32 @@ export default function ProspectCard3D({ prospect, bgColor = '#000', holo = fals
             width: CARD_W,
             height: CARD_H,
             position: 'relative',
-            transformStyle: 'preserve-3d',
-            transform: `rotateX(${rot.x}deg) rotateY(${rot.y}deg)`,
+            transformStyle: flat ? 'flat' : 'preserve-3d',
+            transform: flat
+              ? `scale(${scaleX}, ${scaleY})`
+              : `rotateX(${activeRot.x}deg) rotateY(${activeRot.y}deg)`,
+            transformOrigin: flat ? 'top left' : 'center',
             transition: dragging ? 'none' : 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            cursor: dragging ? 'grabbing' : 'grab',
+            cursor: flat ? 'pointer' : (dragging ? 'grabbing' : 'grab'),
+            pointerEvents: flat ? 'none' : 'auto',
           }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onDoubleClick={resetCard}
+          onDoubleClick={flat ? undefined : resetCard}
         >
-          <CardFront prospect={prospect} bgColor={bgColor} holo={holo} rot={rot} />
-          <CardBack prospect={prospect} />
-          <CardEdges />
+          <CardFront prospect={prospect} bgColor={bgColor} holo={holo} holoIntensity={holoIntensity} rot={activeRot} />
+          {!flat && <CardBack prospect={prospect} />}
+          {!flat && <CardEdges />}
         </div>
       </div>
 
       {/* Hint text */}
-      <div style={{ fontSize: 10, color: '#999', textAlign: 'center' }}>
-        Drag to rotate · Double-click to reset
-      </div>
+      {!flat && (
+        <div style={{ fontSize: 10, color: '#999', textAlign: 'center' }}>
+          Drag to rotate · Double-click to reset
+        </div>
+      )}
     </div>
   )
 }

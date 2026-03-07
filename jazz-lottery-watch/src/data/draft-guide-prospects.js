@@ -8,6 +8,7 @@ const DRAFT_GUIDE_PROSPECTS = [
     pos: 'SF',
     school: 'BYU',
     photo: '/prospects/aj-dybantsa.png',
+    cardPhoto: '/prospects/card-aj-dybantsa.png',
     height: '6\'9"',
     weight: 220,
     age: 18.7,

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { LayoutConfig } from '../components/Layout'
 import DRAFT_GUIDE_PROSPECTS from '../data/draft-guide-prospects'
+import ProspectCard3D from '../components/ProspectCard3D'
 
 const POSITION_COLORS = {
   PG: { color: '#1d4ed8', bg: '#dbeafe' },
@@ -112,11 +113,18 @@ function ProspectCard({ prospect, index }) {
   const bgColor = PHOTO_BG_COLORS[index % PHOTO_BG_COLORS.length]
 
   return (
-    <div className="relative" style={{ paddingLeft: 32 }}>
-      {/* Rank circle overlapping left edge */}
+    <div className="flex flex-col lg:flex-row gap-6 items-start mx-auto" style={{ width: 'fit-content' }}>
+      {/* 3D Card column */}
+      <div className="flex-shrink-0 self-center lg:self-start lg:sticky" style={{ top: 24 }}>
+        <ProspectCard3D prospect={prospect} bgColor={bgColor} holo={prospect.rank <= 4} />
+      </div>
+
+      {/* Content box column */}
+      <div className="relative min-w-0" style={{ paddingRight: 32, width: 480 }}>
+      {/* Rank circle overlapping right edge */}
       <div
         className="rounded-full flex items-center justify-center absolute"
-        style={{ width: 64, height: 64, background: 'var(--sch-teal-bright)', top: 32, left: 0, zIndex: 1 }}
+        style={{ width: 64, height: 64, background: 'var(--sch-teal-bright)', top: 32, right: 0, zIndex: 1 }}
       >
         <span
           className="text-xl"
@@ -133,9 +141,6 @@ function ProspectCard({ prospect, index }) {
         boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
       }}
     >
-      {/* Photo — edge to edge at top */}
-      <PlayerPhoto photo={prospect.photo} name={prospect.name} height={280} bgColor={bgColor} />
-
       <div style={{ padding: 32 }}>
 
       {/* Name / school / measurables */}
@@ -224,6 +229,7 @@ function ProspectCard({ prospect, index }) {
       </div>
     </div>
     </div>
+    </div>
   )
 }
 
@@ -245,7 +251,7 @@ export default function DraftGuide() {
     <>
       <LayoutConfig title="2026 Draft Guide" />
       <div style={{ background: '#f3f4f6', minHeight: '100vh' }}>
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         {/* Filter bar */}
         <div className="mb-5 flex justify-center">
           <FilterGroup label="" options={POSITIONS} value={posFilter} onChange={setPosFilter} />

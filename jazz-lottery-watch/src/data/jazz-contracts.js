@@ -8,6 +8,7 @@ export const CAP_NUMBERS = {
   secondApron: 222_000_000,
   mle: 15_139_000,
   mleHardCapThreshold: 6_000_000,
+  minRosterSize: 12,
   // Trade matching thresholds (2026-27, indexed to cap)
   tradeTier1: 8_874_000,    // outgoing ≤ this → 200% + $250K
   tradeTier2: 35_496_000,   // outgoing ≤ this → outgoing + tier1 + $250K

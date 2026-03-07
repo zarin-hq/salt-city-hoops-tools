@@ -206,10 +206,7 @@ export default function useSimState() {
       trade.otherOut.forEach(p => { totalPayroll += (p.salary || 0) })
     })
 
-    const capSpace = CAP_NUMBERS.salaryCap - totalPayroll
-    const taxSpace = CAP_NUMBERS.luxuryTax - totalPayroll
-
-    // Count roster spots
+    // Count roster spots (before cap/tax so we can apply incomplete roster charges)
     let rosterCount = GUARANTEED.length
     NON_GUARANTEED.forEach(p => {
       if (state.nonGuaranteedDecisions[p.name] === 'keep') rosterCount++
@@ -235,6 +232,14 @@ export default function useSimState() {
       rosterCount -= trade.jazzOut.filter(p => p.name).length
       rosterCount += trade.otherOut.filter(p => p.name).length
     })
+
+    // Incomplete roster charge: each empty spot below 12 = rookie minimum cap hold
+    const emptyRosterHolds = Math.max(0, CAP_NUMBERS.minRosterSize - rosterCount)
+    const rosterHoldTotal = emptyRosterHolds * VET_MIN_SCALE[0]
+    totalPayroll += rosterHoldTotal
+
+    const capSpace = CAP_NUMBERS.salaryCap - totalPayroll
+    const taxSpace = CAP_NUMBERS.luxuryTax - totalPayroll
 
     // Hard cap logic
     const totalMLE = state.signedFAs
@@ -271,7 +276,7 @@ export default function useSimState() {
       hardCap = CAP_NUMBERS.secondApron
     }
 
-    return { totalPayroll, capSpace, taxSpace, rosterCount, totalMLE, hardCap, hardCapTriggers }
+    return { totalPayroll, capSpace, taxSpace, rosterCount, emptyRosterHolds, rosterHoldTotal, totalMLE, hardCap, hardCapTriggers }
   }, [state])
 
   // Build roster list (all players currently on the team)

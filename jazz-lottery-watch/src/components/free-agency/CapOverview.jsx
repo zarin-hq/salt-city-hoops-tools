@@ -11,7 +11,7 @@ const fmt = n => {
 }
 
 export default function CapOverview({ computed }) {
-  const { totalPayroll, capSpace, taxSpace, rosterCount, hardCap, hardCapTriggers } = computed
+  const { totalPayroll, capSpace, taxSpace, rosterCount, emptyRosterHolds, rosterHoldTotal, hardCap, hardCapTriggers } = computed
   const { salaryCap, luxuryTax, firstApron, secondApron } = CAP_NUMBERS
 
   const [mounted, setMounted] = useState(false)
@@ -31,7 +31,7 @@ export default function CapOverview({ computed }) {
     { label: 'Total Payroll', value: fmt(totalPayroll), color: overHardCap ? '#dc2626' : 'var(--sch-black)' },
     { label: 'Cap Space', value: fmt(capSpace), sub: capSpace < 0 ? 'Over cap' : 'Under cap', color: 'var(--sch-black)', tip: 'How much room the team has before reaching the salary cap. Teams over the cap can still sign players using exceptions like the MLE and vet minimum.' },
     { label: 'Tax Space', value: fmt(taxSpace), sub: taxSpace < 0 ? 'Over tax' : 'Under tax', color: taxSpace >= 0 ? 'var(--sch-black)' : '#dc2626', tip: 'How much room the team has before hitting the luxury tax line. Teams over the tax pay a progressive dollar-for-dollar penalty that increases with repeat offenses.', tipLeft: true },
-    { label: 'Roster Spots', value: `${rosterCount}/15`, sub: rosterCount > 15 ? 'Over limit' : `${15 - rosterCount} open`, color: rosterCount > 15 ? '#dc2626' : 'var(--text)' },
+    { label: 'Roster Spots', value: `${rosterCount}/15`, sub: emptyRosterHolds > 0 ? `${emptyRosterHolds} hold${emptyRosterHolds > 1 ? 's' : ''}: +${fmt(rosterHoldTotal)}` : rosterCount > 15 ? 'Over limit' : `${15 - rosterCount} open`, color: rosterCount > 15 ? '#dc2626' : 'var(--text)', tip: emptyRosterHolds > 0 ? `Teams must carry at least 12 players. Each empty spot counts as a ${fmt(rosterHoldTotal / emptyRosterHolds)} cap hold (incomplete roster charge).` : undefined },
   ]
 
   return (

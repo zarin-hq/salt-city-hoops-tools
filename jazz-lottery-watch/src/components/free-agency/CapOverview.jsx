@@ -11,7 +11,7 @@ const fmt = n => {
 }
 
 export default function CapOverview({ computed }) {
-  const { totalPayroll, capSpace, taxSpace, rosterCount } = computed
+  const { totalPayroll, capSpace, taxSpace, rosterCount, hardCap, hardCapTriggers } = computed
   const { salaryCap, luxuryTax, firstApron, secondApron } = CAP_NUMBERS
 
   const [mounted, setMounted] = useState(false)
@@ -24,9 +24,11 @@ export default function CapOverview({ computed }) {
   const taxLinePct = (luxuryTax / barMax) * 100
   const apron1Pct = (firstApron / barMax) * 100
   const apron2Pct = (secondApron / barMax) * 100
+  const hardCapPct = hardCap ? (hardCap / barMax) * 100 : null
+  const overHardCap = hardCap && totalPayroll > hardCap
 
   const cards = [
-    { label: 'Total Payroll', value: fmt(totalPayroll), color: 'var(--sch-black)' },
+    { label: 'Total Payroll', value: fmt(totalPayroll), color: overHardCap ? '#dc2626' : 'var(--sch-black)' },
     { label: 'Cap Space', value: fmt(capSpace), sub: capSpace < 0 ? 'Over cap' : 'Under cap', color: 'var(--sch-black)', tip: 'How much room the team has before reaching the salary cap. Teams over the cap can still sign players using exceptions like the MLE and vet minimum.' },
     { label: 'Tax Space', value: fmt(taxSpace), sub: taxSpace < 0 ? 'Over tax' : 'Under tax', color: taxSpace >= 0 ? 'var(--sch-black)' : '#dc2626', tip: 'How much room the team has before hitting the luxury tax line. Teams over the tax pay a progressive dollar-for-dollar penalty that increases with repeat offenses.', tipLeft: true },
     { label: 'Roster Spots', value: `${rosterCount}/15`, sub: rosterCount > 15 ? 'Over limit' : `${15 - rosterCount} open`, color: rosterCount > 15 ? '#dc2626' : 'var(--text)' },
@@ -38,12 +40,15 @@ export default function CapOverview({ computed }) {
       <div className="rounded-xl py-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', paddingLeft: 16, paddingRight: 16, overflow: 'visible', position: 'relative', zIndex: 10 }}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Salary</span>
+          {hardCap && (
+            <HardCapBadge hardCap={hardCap} hardCapTriggers={hardCapTriggers} overHardCap={overHardCap} />
+          )}
         </div>
         <div className="relative h-6 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
           {/* Payroll fill */}
           <div
             className="h-full rounded-full"
-            style={{ width: `${payrollPct}%`, background: 'var(--sch-teal-bright)', minWidth: mounted ? 4 : 0, transition: 'width 0.8s cubic-bezier(0.22, 1, 0.36, 1)' }}
+            style={{ width: `${payrollPct}%`, background: overHardCap ? '#ef4444' : 'var(--sch-teal-bright)', minWidth: mounted ? 4 : 0, transition: 'width 0.8s cubic-bezier(0.22, 1, 0.36, 1)' }}
           />
           {/* Cap line */}
           <div className="absolute top-0 h-full" style={{ left: `${capLinePct}%`, width: 2, background: 'var(--sch-black)', opacity: 0.6 }} />
@@ -53,6 +58,10 @@ export default function CapOverview({ computed }) {
           <div className="absolute top-0 h-full hidden sm:block" style={{ left: `${apron1Pct}%`, width: 2, background: 'var(--sch-black)', opacity: 0.6 }} />
           {/* 2nd Apron line */}
           <div className="absolute top-0 h-full hidden sm:block" style={{ left: `${apron2Pct}%`, width: 2, background: 'var(--sch-black)', opacity: 0.6 }} />
+          {/* Hard cap line */}
+          {hardCapPct && (
+            <div className="absolute top-0 h-full" style={{ left: `${hardCapPct}%`, width: 3, background: '#dc2626', zIndex: 2 }} />
+          )}
         </div>
         {/* Labels below */}
         <div className="relative mt-1" style={{ height: 24 }}>
@@ -60,6 +69,11 @@ export default function CapOverview({ computed }) {
           <CapLabel left={taxLinePct} label="Tax" value={fmt(luxuryTax)} tip="The luxury tax threshold. Teams exceeding this line pay a progressive tax penalty on every dollar over." />
           <span className="hidden sm:inline"><CapLabel left={apron1Pct} label="1st" value={fmt(firstApron)} tip="The first apron restricts teams from using certain exceptions and limits trade flexibility." /></span>
           <span className="hidden sm:inline"><CapLabel left={apron2Pct} label="2nd" value={fmt(secondApron)} tip="The second (hard) apron imposes the strictest restrictions — teams above this cannot aggregate salaries in trades, use the bi-annual exception, or send cash in trades." /></span>
+          {hardCapPct && (
+            <span className="hidden sm:inline">
+              <CapLabel left={hardCapPct} label="Hard" value={fmt(hardCap)} isHardCap tip={`Hard-capped at ${fmt(hardCap)}. Payroll cannot exceed this threshold.`} />
+            </span>
+          )}
         </div>
       </div>
 
@@ -83,13 +97,13 @@ export default function CapOverview({ computed }) {
   )
 }
 
-function CapLabel({ left, label, value, tip }) {
+function CapLabel({ left, label, value, tip, isHardCap }) {
   const [show, setShow] = useState(false)
   const alignRight = left > 60
   return (
     <span
       className="absolute text-[9px] font-bold text-center leading-tight cursor-help"
-      style={{ left: `${left}%`, transform: 'translateX(-50%)', color: 'var(--sch-black)', whiteSpace: 'nowrap' }}
+      style={{ left: `${left}%`, transform: 'translateX(-50%)', color: isHardCap ? '#dc2626' : 'var(--sch-black)', whiteSpace: 'nowrap' }}
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
     >
@@ -107,6 +121,40 @@ function CapLabel({ left, label, value, tip }) {
           }}
         >
           {tip}
+        </span>
+      )}
+    </span>
+  )
+}
+
+function HardCapBadge({ hardCap, hardCapTriggers, overHardCap }) {
+  const [show, setShow] = useState(false)
+  return (
+    <span
+      className="relative inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full cursor-help"
+      style={{
+        background: overHardCap ? '#fee2e2' : '#fef3c7',
+        color: overHardCap ? '#991b1b' : '#92400e',
+      }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      Hard-capped at {fmt(hardCap)}
+      {show && (
+        <span
+          className="absolute z-50 rounded-lg text-[11px] font-normal normal-case tracking-normal text-left leading-snug"
+          style={{
+            top: '100%', right: 0, marginTop: 6,
+            width: 240, padding: '8px 10px',
+            background: 'var(--sch-black)', color: 'white',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            pointerEvents: 'none', whiteSpace: 'normal',
+          }}
+        >
+          <div className="font-bold mb-1">Hard cap triggers:</div>
+          {hardCapTriggers.map((t, i) => (
+            <div key={i}>• {t.reason}</div>
+          ))}
         </span>
       )}
     </span>

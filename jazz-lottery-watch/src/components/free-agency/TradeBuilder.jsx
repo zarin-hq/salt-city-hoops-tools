@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { evaluateTrade } from '../../data/trade-rules'
+import { CAP_NUMBERS } from '../../data/jazz-contracts'
 
 const fmt = n => `$${(n / 1_000_000).toFixed(1)}M`
 const fmtPrecise = n => {
@@ -57,6 +58,25 @@ export default function TradeBuilder({ state, dispatch, roster, computed }) {
   const otherOutTotal = trade.otherOut.reduce((s, p) => s + p.salary, 0)
   const hasTradePlayers = trade.jazzOut.length > 0 || trade.otherOut.length > 0
   const tradeResult = hasTradePlayers ? evaluateTrade(computed.totalPayroll, jazzOutTotal, otherOutTotal, trade.jazzOut.length) : null
+
+  // Hard cap check: what cap would this trade trigger?
+  let tradeHardCap = computed.hardCap
+  if (hasTradePlayers) {
+    const triggers = [...(computed.hardCapTriggers || [])]
+    if (otherOutTotal > jazzOutTotal) {
+      triggers.push({ level: 'firstApron' })
+    }
+    if (trade.jazzOut.length > 1 && trade.otherOut.length > 0) {
+      triggers.push({ level: 'secondApron' })
+    }
+    if (triggers.some(t => t.level === 'firstApron')) {
+      tradeHardCap = CAP_NUMBERS.firstApron
+    } else if (triggers.some(t => t.level === 'secondApron')) {
+      tradeHardCap = CAP_NUMBERS.secondApron
+    }
+  }
+  const projectedPayroll = computed.totalPayroll - jazzOutTotal + otherOutTotal
+  const tradeViolatesHardCap = hasTradePlayers && tradeHardCap && projectedPayroll > tradeHardCap
 
   return (
     <div className="space-y-3">
@@ -222,6 +242,19 @@ export default function TradeBuilder({ state, dispatch, roster, computed }) {
               {tradeResult.ruleDetail}
               {tradeResult.maxIncoming > 0 && otherOutTotal > tradeResult.maxIncoming && (
                 <> Incoming salary exceeds max by <span className="font-bold">{fmtPrecise(otherOutTotal - tradeResult.maxIncoming)}</span>.</>
+              )}
+            </div>
+          )}
+
+          {/* Hard cap violation warning */}
+          {tradeViolatesHardCap && (
+            <div className="text-[11px] px-2 py-1.5 rounded font-semibold" style={{ background: '#fee2e2', color: '#991b1b' }}>
+              This trade would put payroll at {fmt(projectedPayroll)}, exceeding the hard cap at {fmt(tradeHardCap)}.
+              {otherOutTotal > jazzOutTotal && !computed.hardCapTriggers?.some(t => t.level === 'firstApron') && (
+                <> Taking on more salary than sent out triggers a first apron hard cap.</>
+              )}
+              {trade.jazzOut.length > 1 && trade.otherOut.length > 0 && !computed.hardCapTriggers?.some(t => t.level === 'secondApron') && (
+                <> Aggregating salary triggers a second apron hard cap.</>
               )}
             </div>
           )}

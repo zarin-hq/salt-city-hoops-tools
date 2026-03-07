@@ -4,9 +4,10 @@
 export const CAP_NUMBERS = {
   salaryCap: 166_000_000,
   luxuryTax: 200_000_000,
-  firstApron: 209_000_000,
+  firstApron: 210_300_000,
   secondApron: 222_000_000,
   mle: 15_139_000,
+  mleHardCapThreshold: 6_000_000,
   // Trade matching thresholds (2026-27, indexed to cap)
   tradeTier1: 8_874_000,    // outgoing ≤ this → 200% + $250K
   tradeTier2: 35_496_000,   // outgoing ≤ this → outgoing + tier1 + $250K

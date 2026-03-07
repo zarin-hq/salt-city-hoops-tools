@@ -260,7 +260,7 @@ export default function FreeAgentMarket({ state, dispatch, computed, waivedPlaye
             </thead>
             <tbody>
               {visibleAgents.map(agent => (
-                <AgentRow key={agent.name} agent={agent} onSign={signPlayer} isMobile={isMobile} />
+                <AgentRow key={agent.name} agent={agent} onSign={signPlayer} isMobile={isMobile} computed={computed} />
               ))}
               {filtered.length === 0 && (
                 <tr><td colSpan={7} className="px-3 py-6 text-center text-sm" style={{ color: 'var(--text-faint)' }}>No matching free agents</td></tr>
@@ -327,13 +327,29 @@ export default function FreeAgentMarket({ state, dispatch, computed, waivedPlaye
   )
 }
 
-function AgentRow({ agent, onSign, isMobile }) {
+function AgentRow({ agent, onSign, isMobile, computed }) {
   const [showMle, setShowMle] = useState(false)
   const [mleSalary, setMleSalary] = useState('')
   const [hovered, setHovered] = useState(false)
   const nameRef = useRef(null)
 
   const mleMax = +(CAP_NUMBERS.mle / 1_000_000).toFixed(1)
+
+  // Hard cap check for MLE signing
+  const mleSalaryNum = Number(mleSalary) * 1_000_000 || 0
+  const newTotalMLE = (computed.totalMLE || 0) + mleSalaryNum
+  // Determine what hard cap would be active after this signing
+  let projectedHardCap = computed.hardCap
+  if (mleSalaryNum > 0 && !projectedHardCap) {
+    // This MLE signing would trigger a hard cap
+    projectedHardCap = newTotalMLE > CAP_NUMBERS.mleHardCapThreshold
+      ? CAP_NUMBERS.firstApron
+      : CAP_NUMBERS.secondApron
+  } else if (mleSalaryNum > 0 && projectedHardCap === CAP_NUMBERS.secondApron && newTotalMLE > CAP_NUMBERS.mleHardCapThreshold) {
+    projectedHardCap = CAP_NUMBERS.firstApron
+  }
+  const projectedPayroll = computed.totalPayroll + mleSalaryNum
+  const mleWouldViolateHardCap = showMle && mleSalaryNum > 0 && projectedHardCap && projectedPayroll > projectedHardCap
 
   function handleMleClick() {
     setShowMle(true)
@@ -429,34 +445,47 @@ function AgentRow({ agent, onSign, isMobile }) {
       <td className="px-3 py-2 text-center">
         <div className="inline-flex items-center gap-2">
           {showMle ? (
-            <div className="inline-flex items-center gap-1">
-              <span className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>$</span>
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                value={mleSalary}
-                onChange={e => { const v = e.target.value; setMleSalary(v === '' ? '' : Math.min(Number(v), mleMax)) }}
-                max={mleMax}
-                placeholder="M"
-                className="px-1.5 py-0.5 rounded text-xs tabular-nums w-16"
-                style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text)', outline: 'none' }}
-              />
-              <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>M</span>
-              <button
-                onClick={handleMleSign}
-                className="text-[10px] font-bold px-3 py-1 rounded cursor-pointer btn-dark"
-                style={{ background: 'var(--sch-black)', color: 'white', border: 'none' }}
-              >
-                Sign
-              </button>
-              <button
-                onClick={() => setShowMle(false)}
-                className="text-[10px] font-bold px-1 py-1 cursor-pointer btn-x"
-                style={{ color: 'var(--text-faint)', background: 'none', border: 'none' }}
-              >
-                ×
-              </button>
+            <div className="inline-flex flex-col items-end gap-1">
+              <div className="inline-flex items-center gap-1">
+                <span className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>$</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={mleSalary}
+                  onChange={e => { const v = e.target.value; setMleSalary(v === '' ? '' : Math.min(Number(v), mleMax)) }}
+                  max={mleMax}
+                  placeholder="M"
+                  className="px-1.5 py-0.5 rounded text-xs tabular-nums w-16"
+                  style={{ background: 'var(--bg-raised)', border: mleWouldViolateHardCap ? '1px solid #ef4444' : '1px solid var(--border)', color: 'var(--text)', outline: 'none' }}
+                />
+                <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>M</span>
+                <button
+                  onClick={handleMleSign}
+                  disabled={mleWouldViolateHardCap}
+                  className="text-[10px] font-bold px-3 py-1 rounded btn-dark"
+                  style={{
+                    background: mleWouldViolateHardCap ? '#fca5a5' : 'var(--sch-black)',
+                    color: mleWouldViolateHardCap ? '#991b1b' : 'white',
+                    border: 'none',
+                    cursor: mleWouldViolateHardCap ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Sign
+                </button>
+                <button
+                  onClick={() => setShowMle(false)}
+                  className="text-[10px] font-bold px-1 py-1 cursor-pointer btn-x"
+                  style={{ color: 'var(--text-faint)', background: 'none', border: 'none' }}
+                >
+                  ×
+                </button>
+              </div>
+              {mleWouldViolateHardCap && (
+                <span className="text-[9px] font-semibold" style={{ color: '#dc2626' }}>
+                  Exceeds hard cap ({fmt(projectedHardCap)})
+                </span>
+              )}
             </div>
           ) : (
             <>

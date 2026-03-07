@@ -236,9 +236,42 @@ export default function useSimState() {
       rosterCount += trade.otherOut.filter(p => p.name).length
     })
 
-    const hasMLE = state.signedFAs.some(fa => fa.signingType === 'mle')
+    // Hard cap logic
+    const totalMLE = state.signedFAs
+      .filter(fa => fa.signingType === 'mle')
+      .reduce((sum, fa) => sum + fa.salary, 0)
 
-    return { totalPayroll, capSpace, taxSpace, rosterCount, hasMLE }
+    const hardCapTriggers = []
+
+    // MLE triggers
+    if (totalMLE > 0) {
+      hardCapTriggers.push({ level: 'secondApron', reason: 'MLE used' })
+    }
+    if (totalMLE > CAP_NUMBERS.mleHardCapThreshold) {
+      hardCapTriggers.push({ level: 'firstApron', reason: 'MLE exceeds $6M' })
+    }
+
+    // Trade triggers
+    state.trades.forEach(trade => {
+      const tradeJazzOut = trade.jazzOut.reduce((s, p) => s + (p.salary || 0), 0)
+      const tradeOtherOut = trade.otherOut.reduce((s, p) => s + (p.salary || 0), 0)
+      if (tradeOtherOut > tradeJazzOut) {
+        hardCapTriggers.push({ level: 'firstApron', reason: 'Trade increased salary' })
+      }
+      if (trade.jazzOut.length > 1 && trade.otherOut.length > 0) {
+        hardCapTriggers.push({ level: 'secondApron', reason: 'Salary aggregation in trade' })
+      }
+    })
+
+    // Effective hard cap = lowest triggered cap
+    let hardCap = null
+    if (hardCapTriggers.some(t => t.level === 'firstApron')) {
+      hardCap = CAP_NUMBERS.firstApron
+    } else if (hardCapTriggers.some(t => t.level === 'secondApron')) {
+      hardCap = CAP_NUMBERS.secondApron
+    }
+
+    return { totalPayroll, capSpace, taxSpace, rosterCount, totalMLE, hardCap, hardCapTriggers }
   }, [state])
 
   // Build roster list (all players currently on the team)

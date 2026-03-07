@@ -140,7 +140,7 @@ function HardCapBadge({ hardCap, hardCapTriggers, overHardCap }) {
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
     >
-      Hard-capped at {fmt(hardCap)}
+      Hard-capped at {fmtRound(hardCap)}
       {show && (
         <span
           className="absolute z-50 rounded-lg text-[11px] font-normal normal-case tracking-normal text-left leading-snug"

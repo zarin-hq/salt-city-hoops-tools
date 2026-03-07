@@ -161,7 +161,7 @@ select {
 
 /* 3D card mobile scaling */
 @media (max-width: 639px) {
-  .prospect-card-3d-wrap {
+  .prospect-card-3d-wrap:not(.prospect-card-3d-flat) {
     transform: scale(0.8);
     transform-origin: top center;
     margin-bottom: -60px; /* compensate for scale whitespace */
@@ -174,11 +174,16 @@ select {
   }
 
   .lightbox-card-wrap {
-    overflow: hidden !important;
+    overflow: visible !important;
+    padding-top: 8px !important;
   }
 
   .lightbox-card-wrap .prospect-card-3d-wrap {
     transform: scale(0.75);
     margin-bottom: -80px;
+  }
+
+  .squiggle-divider {
+    width: 100% !important;
   }
 }

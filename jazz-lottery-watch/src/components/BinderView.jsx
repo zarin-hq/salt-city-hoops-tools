@@ -5,6 +5,39 @@ const PHOTO_BG_COLORS = ['#000000', '#2E157D']
 const BASE_W = 300
 const BASE_H = 420
 
+// Background card/ticket images scattered behind binder pages
+const BG_CARDS = [
+  '/bg-cards/bg-card-01.png',
+  '/bg-cards/bg-card-02.png',
+  '/bg-cards/bg-card-03.png',
+  '/bg-cards/bg-card-04.png',
+  '/bg-cards/bg-card-05.png',
+]
+const BG_TICKETS = [
+  '/bg-cards/ticket-1.png',
+  '/bg-cards/ticket-2.png',
+]
+
+// Placement configs for background elements per page
+// Positions are % based, relative to the binder page wrapper
+// Each card should overlap behind the binder at least a little
+const BG_PLACEMENTS = [
+  // Page 1 background elements
+  [
+    { src: BG_CARDS[0], top: 8, left: -18, rotate: -12, width: 28 },
+    { src: BG_CARDS[1], top: 22, right: -20, rotate: 8, width: 26 },
+    { src: BG_CARDS[2], bottom: -4, right: -16, rotate: 15, width: 27 },
+    { src: BG_TICKETS[0], bottom: 8, left: -14, rotate: -5, width: 22, ticket: true },
+  ],
+  // Page 2 background elements
+  [
+    { src: BG_CARDS[3], top: -5, right: -17, rotate: 10, width: 27 },
+    { src: BG_CARDS[4], top: 30, left: -19, rotate: -14, width: 26 },
+    { src: '/bg-cards/bg-card-06.png', bottom: 2, left: -15, rotate: 18, width: 28 },
+    { src: BG_TICKETS[1], bottom: 12, right: -11, rotate: -8, width: 24, ticket: true },
+  ],
+]
+
 export default function BinderView({ prospects, onCardClick }) {
   const pages = []
   for (let i = 0; i < prospects.length; i += 9) {
@@ -12,27 +45,69 @@ export default function BinderView({ prospects, onCardClick }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, padding: '0 8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, padding: '0 8px', overflow: 'hidden' }}>
       {pages.map((pageProspects, pageIdx) => (
-        <BinderPage key={pageIdx} prospects={pageProspects} startIndex={pageIdx * 9} onCardClick={onCardClick} />
+        <BinderPage key={pageIdx} prospects={pageProspects} startIndex={pageIdx * 9} onCardClick={onCardClick} pageIdx={pageIdx} />
       ))}
     </div>
   )
 }
 
-function BinderPage({ prospects, startIndex, onCardClick }) {
+function BinderPage({ prospects, startIndex, onCardClick, pageIdx }) {
+  const placements = BG_PLACEMENTS[pageIdx % BG_PLACEMENTS.length]
+
   return (
     <div
       style={{
         width: '100%',
         maxWidth: 560,
-        aspectRatio: '1185 / 1500',
         position: 'relative',
-        overflow: 'hidden',
       }}
     >
+      {/* Background scattered cards/tickets */}
+      {placements.map((p, i) => {
+        const pos = {}
+        if (p.top != null) pos.top = `${p.top}%`
+        if (p.bottom != null) pos.bottom = `${p.bottom}%`
+        if (p.left != null) pos.left = `${p.left}%`
+        if (p.right != null) pos.right = `${p.right}%`
+        return (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              ...pos,
+              width: `${p.width}%`,
+              transform: `rotate(${p.rotate}deg)`,
+              pointerEvents: 'none',
+              zIndex: 0,
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))',
+              background: p.ticket ? 'transparent' : '#fff',
+              borderRadius: 4,
+            }}
+          >
+            <img
+              src={p.src}
+              alt=""
+              style={{ width: '100%', height: 'auto', display: 'block', opacity: 0.15, borderRadius: 4 }}
+            />
+          </div>
+        )
+      })}
+
+      {/* Binder page */}
+      <div
+        style={{
+          width: '100%',
+          aspectRatio: '1185 / 1500',
+          position: 'relative',
+          overflow: 'hidden',
+          zIndex: 1,
+          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.12))',
+        }}
+      >
       <img
-        src="/binder-page.jpg"
+        src="/binder-page.png"
         alt=""
         style={{
           position: 'absolute', inset: 0,
@@ -45,10 +120,10 @@ function BinderPage({ prospects, startIndex, onCardClick }) {
       <div
         style={{
           position: 'absolute',
-          top: 'calc(2.2% - 8px)',
-          left: 'calc(9.2% - 5px)',
-          right: '1.6%',
-          bottom: 'calc(2.2% - 3px)',
+          top: '1.2%',
+          left: '7.8%',
+          right: '1.8%',
+          bottom: '1.2%',
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gridTemplateRows: 'repeat(3, 1fr)',
@@ -68,6 +143,7 @@ function BinderPage({ prospects, startIndex, onCardClick }) {
             />
           )
         })}
+      </div>
       </div>
     </div>
   )
@@ -160,16 +236,16 @@ function PocketSlot({ prospect, index, onCardClick }) {
       {/* Rank badge — stays in place on hover */}
       <div style={{
         position: 'absolute', ...badgePos,
-        width: 30, height: 30, borderRadius: '50%',
+        width: 36, height: 36, borderRadius: '50%',
         background: STICKER_COLORS[index % STICKER_COLORS.length],
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 2,
-        transform: `rotate(${p.rotate}deg)`,
+        transform: `rotate(${p.rotate}deg) scale(${Math.min(scale / 0.4, 1)})`,
         pointerEvents: 'none',
       }}>
         <span style={{
           fontFamily: "'Permanent Marker', cursive",
-          fontSize: 14, color: '#000', lineHeight: 1,
+          fontSize: 17, color: '#000', lineHeight: 1,
         }}>
           {prospect.rank}
         </span>

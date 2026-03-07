@@ -95,7 +95,7 @@ function PlayerPhoto({ photo, name, height = 280, bgColor = '#000000' }) {
 function StatCell({ label, value }) {
   return (
     <div
-      className="text-center px-3 py-2 rounded-lg"
+      className="text-center px-1.5 py-2 rounded-lg"
       style={{ background: '#ffffff', border: '1px solid var(--border)' }}
     >
       <div className="font-bold text-sm" style={{ fontFamily: "'Archivo Black', Arial, sans-serif", color: 'var(--text)' }}>
@@ -122,14 +122,14 @@ function ProspectCard({ prospect, index }) {
       </div>
 
       {/* Content box column */}
-      <div className="relative min-w-0 w-full lg:w-[480px]" style={{ paddingRight: 32 }}>
+      <div className="relative min-w-0 w-full lg:w-[480px]">
       {/* Rank circle overlapping right edge */}
       <div
         className="rounded-full flex items-center justify-center absolute"
-        style={{ width: 64, height: 64, background: 'var(--sch-teal-bright)', top: 32, right: 0, zIndex: 1 }}
+        style={{ width: 48, height: 48, background: 'var(--sch-teal-bright)', top: 24, right: -12, zIndex: 1 }}
       >
         <span
-          className="text-xl"
+          className="text-base"
           style={{ fontFamily: "'Archivo Black', Arial, sans-serif", color: '#000000' }}
         >
           {prospect.rank}
@@ -313,7 +313,7 @@ export default function DraftGuide() {
 
         {/* Position filter — only in list view */}
         {viewMode === 'list' && (
-          <div className="mb-5 flex justify-center">
+          <div style={{ marginBottom: 44 }} className="flex justify-center">
             <FilterGroup label="" options={POSITIONS} value={posFilter} onChange={setPosFilter} />
           </div>
         )}
@@ -328,6 +328,7 @@ export default function DraftGuide() {
                   <img
                     src="/squiggle-divider.svg"
                     alt=""
+                    className="squiggle-divider"
                     style={{ width: '40%', margin: '72px auto 32px' }}
                   />
                 )}

@@ -20,7 +20,7 @@ const SCHOOL_LOGO_IDS = {
 function StatCell({ label, value }) {
   return (
     <div
-      className="text-center px-3 py-2 rounded-lg"
+      className="text-center px-1.5 py-2 rounded-lg"
       style={{ background: '#ffffff', border: '1px solid var(--border)' }}
     >
       <div className="font-bold text-sm" style={{ fontFamily: "'Archivo Black', Arial, sans-serif", color: 'var(--text)' }}>
@@ -61,27 +61,28 @@ export default function CardLightbox({ prospect, onClose }) {
       }}
       onClick={onClose}
     >
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        style={{
-          position: 'fixed', top: 16, right: 16,
-          width: 40, height: 40, borderRadius: '50%',
-          background: 'rgba(255,255,255,0.1)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: '#fff', fontSize: 20, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'background 0.15s',
-          zIndex: 10,
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-      >
-        ✕
-      </button>
+      {/* Sticky close button row */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 10001, display: 'flex', justifyContent: 'flex-end', padding: 16, pointerEvents: 'none' }}>
+        <button
+          onClick={(e) => { e.stopPropagation(); onClose() }}
+          style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'rgba(0,0,0,0.5)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            color: '#fff', fontSize: 20, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.15s',
+            pointerEvents: 'auto',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.7)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
+        >
+          ✕
+        </button>
+      </div>
 
       {/* Centering wrapper */}
-      <div className="lightbox-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100%', padding: 24 }}>
+      <div className="lightbox-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100% - 72px)', padding: 24 }}>
       {/* Content — stop propagation so clicking inside doesn't close */}
       <div
         onClick={e => e.stopPropagation()}
@@ -89,7 +90,7 @@ export default function CardLightbox({ prospect, onClose }) {
         style={{ width: 'fit-content', maxWidth: '100%' }}
       >
         {/* 3D Card */}
-        <div className="flex-shrink-0 lightbox-card-wrap" style={{ overflow: 'visible' }}>
+        <div className="flex-shrink-0 lightbox-card-wrap" style={{ overflow: 'visible', paddingTop: 32 }}>
           <ProspectCard3D
             prospect={prospect}
             bgColor={bgColor}
@@ -98,14 +99,14 @@ export default function CardLightbox({ prospect, onClose }) {
         </div>
 
         {/* Stats content box */}
-        <div className="relative min-w-0 w-full lg:w-[480px]" style={{ paddingRight: 32 }}>
+        <div className="relative min-w-0 w-full lg:w-[480px]">
           {/* Rank circle */}
           <div
             className="rounded-full flex items-center justify-center absolute"
-            style={{ width: 64, height: 64, background: 'var(--sch-teal-bright)', top: 32, right: 0, zIndex: 1 }}
+            style={{ width: 48, height: 48, background: 'var(--sch-teal-bright)', top: 24, right: -12, zIndex: 1 }}
           >
             <span
-              className="text-xl"
+              className="text-base"
               style={{ fontFamily: "'Archivo Black', Arial, sans-serif", color: '#000000' }}
             >
               {prospect.rank}

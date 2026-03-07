@@ -114,12 +114,8 @@ function CardBack({ prospect }) {
       }}>
         {/* Blue top section */}
         <div style={{ background: '#052065', padding: '10px 12px 8px' }}>
-          {/* Top section: rank + bio + headshot */}
+          {/* Top section: bio + headshot */}
           <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: 6 }}>
-            {/* Rank */}
-            <div style={{ fontFamily: "'Archivo Black', Arial, sans-serif", fontSize: 18, color: '#fff', marginRight: 8, lineHeight: 1 }}>
-              {prospect.rank}
-            </div>
             {/* Bio info */}
             <div style={{ flex: 1, fontSize: 8.5, color: '#fff', lineHeight: 1.6 }}>
               <div>Height: {prospect.height}  Weight: {prospect.weight}</div>
@@ -301,7 +297,7 @@ export default function ProspectCard3D({ prospect, bgColor = '#000', holo = fals
 
   return (
     <div
-      className="prospect-card-3d-wrap"
+      className={`prospect-card-3d-wrap${flat ? ' prospect-card-3d-flat' : ''}`}
       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: flat ? 0 : 8, userSelect: 'none' }}
       onClick={flat && onClick ? onClick : undefined}
     >

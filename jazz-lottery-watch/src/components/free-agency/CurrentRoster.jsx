@@ -229,18 +229,23 @@ export default function CurrentRoster({ state, dispatch }) {
                                   type="number"
                                   step="0.1"
                                   min="0"
+                                  max={p.maxSalary ? +(p.maxSalary / 1_000_000).toFixed(1) : undefined}
                                   value={d.salary > 0 ? +(d.salary / 1_000_000).toFixed(1) : ''}
-                                  onChange={e => dispatch({
-                                    type: 'SET_BIRD_RIGHTS',
-                                    player: p.name,
-                                    decision: 'sign',
-                                    salary: Number(e.target.value) * 1_000_000,
-                                  })}
+                                  onChange={e => {
+                                    let val = Number(e.target.value) * 1_000_000
+                                    if (p.maxSalary && val > p.maxSalary) val = p.maxSalary
+                                    dispatch({
+                                      type: 'SET_BIRD_RIGHTS',
+                                      player: p.name,
+                                      decision: 'sign',
+                                      salary: val,
+                                    })
+                                  }}
                                   placeholder="M"
                                   className="px-1.5 py-0.5 rounded text-xs tabular-nums w-16"
                                   style={{ background: 'var(--bg-raised)', border: '1px solid var(--border)', color: 'var(--text)', outline: 'none' }}
                                 />
-                                <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>M/yr</span>
+                                <span className="text-[10px]" style={{ color: 'var(--text-faint)' }}>M/yr{p.maxSalary ? ` (max ${fmt(p.maxSalary)})` : ''}</span>
                               </div>
                             )}
                           </div>

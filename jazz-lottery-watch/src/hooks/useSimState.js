@@ -1,5 +1,11 @@
 import { useReducer, useEffect, useMemo } from 'react'
-import { CAP_NUMBERS, GUARANTEED, NON_GUARANTEED, RFA_DECISIONS, TEAM_OPTIONS, CAP_HOLDS } from '../data/jazz-contracts'
+import { CAP_NUMBERS, GUARANTEED, NON_GUARANTEED, RFA_DECISIONS, TEAM_OPTIONS, CAP_HOLDS, VET_MIN_SCALE } from '../data/jazz-contracts'
+
+// Vet minimum contracts only count ~$2.46M against the cap (2-year min)
+// regardless of the player's actual experience-based minimum salary.
+const VET_MIN_CAP_HIT = VET_MIN_SCALE[2] // $2,464,849
+const VET_MIN_MAX = VET_MIN_SCALE[10]     // $3,900,945 (10+ years)
+const vetMinCapHit = salary => (salary > 0 && salary <= VET_MIN_MAX) ? VET_MIN_CAP_HIT : salary
 
 const STORAGE_KEY = 'jazz-fa-sim'
 
@@ -170,7 +176,7 @@ export default function useSimState() {
         if (!reSignedAsRFA) {
           const brD = state.birdRightsDecisions?.[p.name]
           if (brD && brD.decision === 'sign') {
-            totalPayroll += brD.salary // Signed salary replaces cap hold
+            totalPayroll += vetMinCapHit(brD.salary) // Vet min contracts count at 2-year min
           } else {
             totalPayroll += p.capHold
           }
@@ -189,9 +195,9 @@ export default function useSimState() {
     // Draft pick salary (placeholder $8M if none selected)
     totalPayroll += state.draftPick ? state.draftPick.salary : 8_000_000
 
-    // Signed free agents
+    // Signed free agents (vet min contracts count at 2-year min cap hit)
     state.signedFAs.forEach(fa => {
-      totalPayroll += fa.salary
+      totalPayroll += fa.signingType === 'vet_min' ? VET_MIN_CAP_HIT : fa.salary
     })
 
     // Trades: subtract outgoing, add incoming
@@ -267,7 +273,7 @@ export default function useSimState() {
         if (!rfaD || rfaD.decision !== 'resign') {
           const brD = state.birdRightsDecisions?.[p.name]
           if (brD && brD.decision === 'sign') {
-            players.push({ ...p, salary: brD.salary, status: 'signed (Bird Rights)' })
+            players.push({ ...p, salary: vetMinCapHit(brD.salary), status: 'signed (Bird Rights)' })
           } else {
             players.push({ ...p, salary: p.capHold, status: 'cap hold' })
           }

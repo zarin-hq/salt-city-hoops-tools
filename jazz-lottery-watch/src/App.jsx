@@ -219,7 +219,7 @@ function DiscourseComments() {
 
     window.DiscourseEmbed = {
       discourseUrl: 'https://saltcityhoops.discourse.group/',
-      discourseEmbedUrl: 'https://salt-city-hoops-tools.vercel.app/jazz-lottery-watch',
+      discourseEmbedUrl: 'https://salt-city-hoops-tools.vercel.app/lottery-watch',
     }
 
     const script = document.createElement('script')

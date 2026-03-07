@@ -7,6 +7,9 @@ export const CAP_NUMBERS = {
   firstApron: 209_000_000,
   secondApron: 222_000_000,
   mle: 15_139_000,
+  // Trade matching thresholds (2026-27, indexed to cap)
+  tradeTier1: 8_874_000,    // outgoing ≤ this → 200% + $250K
+  tradeTier2: 35_496_000,   // outgoing ≤ this → outgoing + tier1 + $250K
 }
 
 // Vet minimum salary by years of experience (2026-27)
@@ -47,11 +50,11 @@ export const NON_GUARANTEED = [
 ]
 
 export const CAP_HOLDS = [
-  { name: 'Jusuf Nurkic',    espnId: '3102530', position: 'C',  age: 32, capHold: 29_062_500, qo: null,      rights: 'Bird' },
-  { name: 'Walker Kessler',  espnId: '4433136', position: 'C',  age: 25, capHold: 14_636_814, qo: 7_064_702, rights: 'Restricted Bird' },
-  { name: 'Kevin Love',      espnId: '3449',    position: 'C',  age: 38, capHold: 7_885_000,  qo: null,      rights: 'Bird' },
-  { name: 'Oscar Tshiebwe',  espnId: '4433218', position: 'PF', age: 27, capHold: 2_198_879,  qo: 2_198_879, rights: 'Two-Way' },
-  { name: 'Elijah Harkless', espnId: '4397449', position: 'PG', age: 26, capHold: 2_198_879,  qo: 2_198_879, rights: 'Two-Way' },
+  { name: 'Jusuf Nurkic',    espnId: '3102530', position: 'C',  age: 32, capHold: 29_062_500, qo: null,      rights: 'Bird',            maxSalary: 58_100_000 },
+  { name: 'Walker Kessler',  espnId: '4433136', position: 'C',  age: 25, capHold: 14_636_814, qo: 7_064_702, rights: 'Restricted Bird',  maxSalary: 41_500_000 },
+  { name: 'Kevin Love',      espnId: '3449',    position: 'C',  age: 38, capHold: 7_885_000,  qo: null,      rights: 'Bird',            maxSalary: 58_100_000 },
+  { name: 'Oscar Tshiebwe',  espnId: '4433218', position: 'PF', age: 27, capHold: 2_198_879,  qo: 2_198_879, rights: 'Two-Way',         maxSalary: 14_000_000 },
+  { name: 'Elijah Harkless', espnId: '4397449', position: 'PG', age: 26, capHold: 2_198_879,  qo: 2_198_879, rights: 'Two-Way',         maxSalary: 14_000_000 },
 ]
 
 export const RFA_DECISIONS = []

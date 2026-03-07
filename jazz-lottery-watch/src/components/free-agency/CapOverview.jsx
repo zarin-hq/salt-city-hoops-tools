@@ -12,7 +12,7 @@ const fmt = n => {
 const fmtRound = n => `$${Math.round(n / 1_000_000)}M`
 
 export default function CapOverview({ computed }) {
-  const { totalPayroll, capSpace, taxSpace, rosterCount, emptyRosterHolds, rosterHoldTotal, hardCap, hardCapTriggers } = computed
+  const { totalPayroll, capSpace, taxSpace, rosterCount, emptyRosterHolds, rosterHoldTotal, hardCap } = computed
   const { salaryCap, luxuryTax, firstApron, secondApron } = CAP_NUMBERS
 
   const [mounted, setMounted] = useState(false)
@@ -25,7 +25,6 @@ export default function CapOverview({ computed }) {
   const taxLinePct = (luxuryTax / barMax) * 100
   const apron1Pct = (firstApron / barMax) * 100
   const apron2Pct = (secondApron / barMax) * 100
-  const hardCapPct = hardCap ? (hardCap / barMax) * 100 : null
   const overHardCap = hardCap && totalPayroll > hardCap
 
   const cards = [
@@ -41,9 +40,6 @@ export default function CapOverview({ computed }) {
       <div className="rounded-xl py-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', paddingLeft: 16, paddingRight: 16, overflow: 'visible', position: 'relative', zIndex: 10 }}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Salary</span>
-          {hardCap && (
-            <HardCapBadge hardCap={hardCap} hardCapTriggers={hardCapTriggers} overHardCap={overHardCap} />
-          )}
         </div>
         <div className="relative h-6 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
           {/* Payroll fill */}
@@ -59,10 +55,6 @@ export default function CapOverview({ computed }) {
           <div className="absolute top-0 h-full hidden sm:block" style={{ left: `${apron1Pct}%`, width: 2, background: 'var(--sch-black)', opacity: 0.6 }} />
           {/* 2nd Apron line */}
           <div className="absolute top-0 h-full hidden sm:block" style={{ left: `${apron2Pct}%`, width: 2, background: 'var(--sch-black)', opacity: 0.6 }} />
-          {/* Hard cap line */}
-          {hardCapPct && (
-            <div className="absolute top-0 h-full" style={{ left: `${hardCapPct}%`, width: 3, background: '#dc2626', zIndex: 2 }} />
-          )}
         </div>
         {/* Labels below */}
         <div className="relative mt-1" style={{ height: 24 }}>
@@ -70,11 +62,6 @@ export default function CapOverview({ computed }) {
           <CapLabel left={taxLinePct} label="Tax" value={fmtRound(luxuryTax)} tip="The luxury tax threshold. Teams exceeding this line pay a progressive tax penalty on every dollar over." />
           <span className="hidden sm:inline"><CapLabel left={apron1Pct} label="1st" value={fmtRound(firstApron)} tip="The first apron restricts teams from using certain exceptions and limits trade flexibility." /></span>
           <span className="hidden sm:inline"><CapLabel left={apron2Pct} label="2nd" value={fmtRound(secondApron)} tip="The second (hard) apron imposes the strictest restrictions — teams above this cannot aggregate salaries in trades, use the bi-annual exception, or send cash in trades." /></span>
-          {hardCapPct && (
-            <span className="hidden sm:inline">
-              <CapLabel left={hardCapPct} label="Hard" value={fmtRound(hardCap)} isHardCap tip={`Hard-capped at ${fmt(hardCap)}. Payroll cannot exceed this threshold.`} />
-            </span>
-          )}
         </div>
       </div>
 
@@ -128,39 +115,6 @@ function CapLabel({ left, label, value, tip, isHardCap }) {
   )
 }
 
-function HardCapBadge({ hardCap, hardCapTriggers, overHardCap }) {
-  const [show, setShow] = useState(false)
-  return (
-    <span
-      className="relative inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full cursor-help"
-      style={{
-        background: overHardCap ? '#fee2e2' : '#fef3c7',
-        color: overHardCap ? '#991b1b' : '#92400e',
-      }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-    >
-      Hard-capped at {fmtRound(hardCap)}
-      {show && (
-        <span
-          className="absolute z-50 rounded-lg text-[11px] font-normal normal-case tracking-normal text-left leading-snug"
-          style={{
-            top: '100%', right: 0, marginTop: 6,
-            width: 240, padding: '8px 10px',
-            background: 'var(--sch-black)', color: 'white',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            pointerEvents: 'none', whiteSpace: 'normal',
-          }}
-        >
-          <div className="font-bold mb-1">Hard cap triggers:</div>
-          {hardCapTriggers.map((t, i) => (
-            <div key={i}>• {t.reason}</div>
-          ))}
-        </span>
-      )}
-    </span>
-  )
-}
 
 function CardTip({ text, alignLeft }) {
   const [show, setShow] = useState(false)

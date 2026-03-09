@@ -101,15 +101,15 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
     const dx = (sourceRect.left + sourceRect.width / 2) - (targetRect.left + CARD_W / 2)
     const dy = (sourceRect.top + sourceRect.height / 2) - (targetRect.top + CARD_H / 2)
 
-    // Start at source position/scale, flat (no tilt)
-    el.style.transform = `translate(${dx}px, ${dy}px) scale(${srcScale}) perspective(1200px) rotateX(0deg) rotateY(0deg)`
+    // Start at source position/scale, with a full Y-flip queued
+    el.style.transform = `translate(${dx}px, ${dy}px) scale(${srcScale}) rotateY(-360deg)`
     el.style.transition = 'none'
 
-    // Force reflow then animate to target with lightbox tilt
+    // Force reflow then animate to target — card flips as it flies
     el.getBoundingClientRect()
     requestAnimationFrame(() => {
       el.style.transition = `transform ${ANIM_DURATION}ms cubic-bezier(0.16, 1, 0.3, 1)`
-      el.style.transform = 'translate(0px, 0px) scale(1) perspective(1200px) rotateX(5deg) rotateY(12deg)'
+      el.style.transform = 'translate(0px, 0px) scale(1) rotateY(0deg)'
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -160,15 +160,14 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
               width: CARD_W, height: CARD_H,
               willChange: 'transform',
               transformOrigin: 'center center',
+              transformStyle: 'preserve-3d',
             }}
           >
             <ProspectCard3D
               prospect={prospect}
               bgColor={bgColor}
               holo={prospect.rank <= 4}
-              flat
-              width={CARD_W}
-              height={CARD_H}
+              showHint={false}
             />
           </div>
         </div>

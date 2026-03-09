@@ -71,6 +71,13 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
   const targetRef = useRef(null)
   const consumedRect = useRef(false)
 
+  // Backdrop fades in immediately on mount (during animation, not after)
+  const [backdropIn, setBackdropIn] = useState(!sourceRect)
+  useEffect(() => {
+    if (!sourceRect) return
+    requestAnimationFrame(() => setBackdropIn(true))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Kick off the fly-in animation on first mount only
   useLayoutEffect(() => {
     if (!sourceRect || consumedRect.current) return
@@ -94,15 +101,15 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
     const dx = (sourceRect.left + sourceRect.width / 2) - (targetRect.left + CARD_W / 2)
     const dy = (sourceRect.top + sourceRect.height / 2) - (targetRect.top + CARD_H / 2)
 
-    // Start at source position/scale
-    el.style.transform = `translate(${dx}px, ${dy}px) scale(${srcScale})`
+    // Start at source position/scale, flat (no tilt)
+    el.style.transform = `translate(${dx}px, ${dy}px) scale(${srcScale}) perspective(1200px) rotateX(0deg) rotateY(0deg)`
     el.style.transition = 'none'
 
-    // Force reflow then animate to target
+    // Force reflow then animate to target with lightbox tilt
     el.getBoundingClientRect()
     requestAnimationFrame(() => {
       el.style.transition = `transform ${ANIM_DURATION}ms cubic-bezier(0.16, 1, 0.3, 1)`
-      el.style.transform = 'translate(0px, 0px) scale(1)'
+      el.style.transform = 'translate(0px, 0px) scale(1) perspective(1200px) rotateX(5deg) rotateY(12deg)'
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -134,9 +141,9 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: isOpen ? 'rgba(0, 0, 0, 0.75)' : 'rgba(0, 0, 0, 0)',
-        backdropFilter: isOpen ? 'blur(8px)' : 'blur(0px)',
-        WebkitBackdropFilter: isOpen ? 'blur(8px)' : 'blur(0px)',
+        background: backdropIn ? 'rgba(0, 0, 0, 0.75)' : 'rgba(0, 0, 0, 0)',
+        backdropFilter: backdropIn ? 'blur(8px)' : 'blur(0px)',
+        WebkitBackdropFilter: backdropIn ? 'blur(8px)' : 'blur(0px)',
         transition: `background ${ANIM_DURATION}ms ease, backdrop-filter ${ANIM_DURATION}ms ease, -webkit-backdrop-filter ${ANIM_DURATION}ms ease`,
         overflowY: isOpen ? 'auto' : 'hidden',
         overflowX: 'hidden',
@@ -167,14 +174,14 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         </div>
       )}
 
-      {/* Full lightbox content — visible after animation completes */}
+      {/* Lightbox content — individual elements animate in independently */}
+      <div style={{ pointerEvents: isOpen ? 'auto' : 'none' }}>
+      {/* Sticky close button row — fades in */}
       <div style={{
-        opacity: isOpen ? 1 : 0,
-        transition: `opacity 200ms ease`,
-        pointerEvents: isOpen ? 'auto' : 'none',
+        position: 'sticky', top: 0, zIndex: 10001,
+        display: 'flex', justifyContent: 'flex-end', padding: 16, pointerEvents: 'none',
+        opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease',
       }}>
-      {/* Sticky close button row */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 10001, display: 'flex', justifyContent: 'flex-end', padding: 16, pointerEvents: 'none' }}>
         <button
           onClick={(e) => { e.stopPropagation(); onClose() }}
           style={{
@@ -200,8 +207,11 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         onClick={e => e.stopPropagation()}
         style={{ display: 'flex', alignItems: 'flex-start', gap: 16, maxWidth: '100%' }}
       >
-        {/* Prev arrow — desktop only */}
-        <div className="hidden lg:flex" style={{ paddingTop: 260 }}>
+        {/* Prev arrow — desktop only, fades in */}
+        <div className="hidden lg:flex" style={{
+          paddingTop: 260,
+          opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease 80ms',
+        }}>
           {prevProspect && onNavigate ? (
             <NavArrow direction="prev" onClick={() => onNavigate(prevProspect)} />
           ) : <div style={{ width: 44 }} />}
@@ -213,7 +223,7 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-center lg:items-start"
         style={{ width: 'fit-content', maxWidth: '100%' }}
       >
-        {/* 3D Card */}
+        {/* 3D Card — always visible (flying card covers it during animation) */}
         <div ref={targetRef} className="flex-shrink-0 lightbox-card-wrap" style={{ overflow: 'visible', paddingTop: 32 }}>
           <ProspectCard3D
             prospect={prospect}
@@ -222,8 +232,13 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
           />
         </div>
 
-        {/* Stats content box */}
-        <div className="relative min-w-0 w-full lg:w-[480px]">
+        {/* Stats content box — slides up + fades in */}
+        <div className="relative min-w-0 w-full lg:w-[480px]" style={{
+          opacity: isOpen ? 1 : 0,
+          transform: isOpen ? 'translateY(0)' : 'translateY(40px)',
+          transition: 'opacity 400ms ease 80ms, transform 400ms cubic-bezier(0.16, 1, 0.3, 1) 80ms',
+          willChange: isOpen ? 'auto' : 'transform, opacity',
+        }}>
           {/* Rank circle */}
           <div
             className="rounded-full flex items-center justify-center absolute"
@@ -334,9 +349,12 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         </div>
       </div>
 
-      {/* Mobile prev/next arrows */}
+      {/* Mobile prev/next arrows — fade in */}
       {onNavigate && (
-        <div className="flex lg:hidden items-center justify-center gap-4" style={{ paddingBottom: 8 }}>
+        <div className="flex lg:hidden items-center justify-center gap-4" style={{
+          paddingBottom: 8,
+          opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease 80ms',
+        }}>
           {prevProspect ? (
             <NavArrow direction="prev" onClick={() => onNavigate(prevProspect)} />
           ) : <div style={{ width: 44 }} />}
@@ -350,8 +368,11 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
       )}
       </div>
 
-        {/* Next arrow — desktop only */}
-        <div className="hidden lg:flex" style={{ paddingTop: 260 }}>
+        {/* Next arrow — desktop only, fades in */}
+        <div className="hidden lg:flex" style={{
+          paddingTop: 260,
+          opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease 80ms',
+        }}>
           {nextProspect && onNavigate ? (
             <NavArrow direction="next" onClick={() => onNavigate(nextProspect)} />
           ) : <div style={{ width: 44 }} />}

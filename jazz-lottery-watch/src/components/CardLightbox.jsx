@@ -87,19 +87,26 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
     const targetEl = targetRef.current
     if (!el || !targetEl) { setPhase('open'); return }
 
-    // Measure where the card lands in the lightbox
-    const targetRect = targetEl.getBoundingClientRect()
+    // Measure the actual rendered card (accounts for mobile CSS scale)
+    const cardWrap = targetEl.querySelector('.prospect-card-3d-wrap')
+    const perspectiveEl = cardWrap?.firstElementChild
+    const actualRect = perspectiveEl ? perspectiveEl.getBoundingClientRect() : targetEl.getBoundingClientRect()
 
-    // Position the flying card at the target location (its resting place)
-    el.style.left = `${targetRect.left}px`
-    el.style.top = `${targetRect.top}px`
+    // End scale: match the lightbox card's visual size (0.75 on mobile, 1 on desktop)
+    const endScale = actualRect.width / CARD_W
+    const endCenterX = actualRect.left + actualRect.width / 2
+    const endCenterY = actualRect.top + actualRect.height / 2
+
+    // Position flying card so its center aligns with actual card center at end scale
+    el.style.left = `${endCenterX - CARD_W / 2}px`
+    el.style.top = `${endCenterY - CARD_H / 2}px`
 
     // Source scale relative to full card size
     const srcScale = sourceRect.width / CARD_W
 
-    // Translate so card center moves from source center to target center
-    const dx = (sourceRect.left + sourceRect.width / 2) - (targetRect.left + CARD_W / 2)
-    const dy = (sourceRect.top + sourceRect.height / 2) - (targetRect.top + CARD_H / 2)
+    // Translate from end center to source center
+    const dx = (sourceRect.left + sourceRect.width / 2) - endCenterX
+    const dy = (sourceRect.top + sourceRect.height / 2) - endCenterY
 
     // Start at source position/scale, with a full Y-flip queued
     el.style.transform = `translate(${dx}px, ${dy}px) scale(${srcScale}) rotateY(-360deg)`
@@ -109,7 +116,7 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
     el.getBoundingClientRect()
     requestAnimationFrame(() => {
       el.style.transition = `transform ${ANIM_DURATION}ms cubic-bezier(0.16, 1, 0.3, 1)`
-      el.style.transform = 'translate(0px, 0px) scale(1) rotateY(0deg)'
+      el.style.transform = `translate(0px, 0px) scale(${endScale}) rotateY(0deg)`
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

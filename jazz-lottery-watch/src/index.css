@@ -159,6 +159,12 @@ select {
   transform: translateY(-5px);
 }
 
+/* Flying card — preserve 3D context so back face shows during flip */
+.lightbox-fly-card .prospect-card-3d-wrap,
+.lightbox-fly-card .prospect-card-3d-wrap > div {
+  transform-style: preserve-3d !important;
+}
+
 /* 3D card mobile scaling */
 @media (max-width: 639px) {
   .prospect-card-3d-wrap:not(.prospect-card-3d-flat) {

@@ -57,7 +57,7 @@ function NavArrow({ direction, onClick }) {
 
 const CARD_W = 300
 const CARD_H = 420
-const ANIM_DURATION = 2500
+const ANIM_DURATION = 600
 
 export default function CardLightbox({ prospect, prospects = [], onClose, onNavigate, sourceRect }) {
   const bgColor = PHOTO_BG_COLORS[(prospect.rank - 1) % PHOTO_BG_COLORS.length]
@@ -170,7 +170,7 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
               transformStyle: 'preserve-3d',
             }}
           >
-            <div className="lightbox-fly-card">
+            <div className="lightbox-fly-card" style={{ transformStyle: 'preserve-3d' }}>
               <ProspectCard3D
                 prospect={prospect}
                 bgColor={bgColor}

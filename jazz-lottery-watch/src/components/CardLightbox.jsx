@@ -186,34 +186,30 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         </div>
       )}
 
+      {/* Fixed close button — out of flow, no layout impact */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onClose() }}
+        style={{
+          position: 'fixed', top: 16, right: 16, zIndex: 10001,
+          width: 40, height: 40, borderRadius: '50%',
+          background: 'rgba(0,0,0,0.5)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          color: '#fff', fontSize: 20, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'background 0.15s, opacity 250ms ease',
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.7)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
+      >
+        ✕
+      </button>
+
       {/* Lightbox content — individual elements animate in independently */}
       <div style={{ pointerEvents: isOpen ? 'auto' : 'none' }}>
-      {/* Sticky close button row — fades in */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 10001,
-        display: 'flex', justifyContent: 'flex-end', padding: 16, pointerEvents: 'none',
-        opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease',
-      }}>
-        <button
-          onClick={(e) => { e.stopPropagation(); onClose() }}
-          style={{
-            width: 40, height: 40, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.5)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: '#fff', fontSize: 20, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background 0.15s',
-            pointerEvents: isOpen ? 'auto' : 'none',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.7)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}
-        >
-          ✕
-        </button>
-      </div>
-
       {/* Centering wrapper */}
-      <div className="lightbox-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100% - 72px)', padding: 24 }}>
+      <div className="lightbox-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100%', padding: 24 }}>
       {/* Nav + Content row */}
       <div
         onClick={e => e.stopPropagation()}
@@ -254,7 +250,6 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
           opacity: showStats ? 1 : 0,
           transform: showStats ? 'translateY(0)' : 'translateY(40px)',
           transition: 'opacity 450ms ease, transform 450ms cubic-bezier(0.16, 1, 0.3, 1)',
-          willChange: showStats ? 'auto' : 'transform, opacity',
         }}>
           {/* Rank circle */}
           <div

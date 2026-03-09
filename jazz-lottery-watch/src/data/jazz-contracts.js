@@ -48,7 +48,6 @@ export const GUARANTEED = [
 export const NON_GUARANTEED = [
   { name: 'Svi Mykhailiuk',    espnId: '3133602', position: 'SG',  salary: 3_850_000,  faType: 'UFA', note: 'Non-guaranteed, becomes UFA if waived', deadline: 'Jun 30' },
   { name: 'Kyle Filipowski',   espnId: '4684793', position: 'C/PF',salary: 3_000_000,  faType: 'RFA', note: 'Non-guaranteed, becomes RFA if waived', deadline: 'Jun 30' },
-  { name: 'Vince Williams Jr.',espnId: '4397227', position: 'SG/SF',salary: 2_489_752, faType: 'RFA', note: 'Non-guaranteed, becomes RFA if waived', deadline: 'Jun 29' },
 ]
 
 export const CAP_HOLDS = [

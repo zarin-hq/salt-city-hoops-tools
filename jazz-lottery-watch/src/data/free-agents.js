@@ -120,6 +120,7 @@ const FREE_AGENTS = [
   { name: 'Christian Braun',    espnId: '4431767', position: 'SG',   age: 24, team: 'DEN', type: 'RFA', estimatedSalary: 20_000_000, yearsExp: 4,  stats: { ppg: 16.5, rpg: 5.5, apg: 4.5, tpPct: 37.0 } },
   { name: 'Peyton Watson',      espnId: '4576087', position: 'SF',   age: 24, team: 'DEN', type: 'RFA', estimatedSalary: 14_000_000, yearsExp: 4,  stats: { ppg: 8.5, rpg: 4.0, apg: 1.5, tpPct: 33.0 } },
   { name: 'Mark Williams',      espnId: '4701232', position: 'C',    age: 25, team: 'CHA', type: 'RFA', estimatedSalary: 14_000_000, yearsExp: 4,  stats: { ppg: 12.0, rpg: 8.0, apg: 1.0, tpPct: null } },
+  { name: 'Vince Williams Jr.', espnId: '4397227', position: 'SG/SF', age: 26, team: 'UTA', type: 'RFA', estimatedSalary: 3_000_000,  yearsExp: 4,  stats: { ppg: 5.8, rpg: 2.5, apg: 1.0, tpPct: 35.0 } },
   { name: 'Jalen Wilson',       espnId: '4431714', position: 'SF',   age: 26, team: 'BKN', type: 'RFA', estimatedSalary: 5_000_000,  yearsExp: 3,  stats: { ppg: 8.0, rpg: 4.0, apg: 2.0, tpPct: 33.0 } },
 
   // ──────────────────────────────────────────────

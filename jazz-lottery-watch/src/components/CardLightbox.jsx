@@ -156,7 +156,7 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         backdropFilter: backdropIn ? 'blur(8px)' : 'blur(0px)',
         WebkitBackdropFilter: backdropIn ? 'blur(8px)' : 'blur(0px)',
         transition: `background ${ANIM_DURATION}ms ease, backdrop-filter ${ANIM_DURATION}ms ease, -webkit-backdrop-filter ${ANIM_DURATION}ms ease`,
-        overflowY: isOpen ? 'auto' : 'hidden',
+        overflowY: 'auto',
         overflowX: 'hidden',
       }}
       onClick={onClose}

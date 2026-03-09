@@ -57,7 +57,7 @@ function NavArrow({ direction, onClick }) {
 
 const CARD_W = 300
 const CARD_H = 420
-const ANIM_DURATION = 600
+const ANIM_DURATION = 800
 
 export default function CardLightbox({ prospect, prospects = [], onClose, onNavigate, sourceRect }) {
   const bgColor = PHOTO_BG_COLORS[(prospect.rank - 1) % PHOTO_BG_COLORS.length]

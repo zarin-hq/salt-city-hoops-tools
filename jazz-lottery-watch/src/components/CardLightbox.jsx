@@ -73,9 +73,13 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
 
   // Backdrop fades in immediately on mount (during animation, not after)
   const [backdropIn, setBackdropIn] = useState(!sourceRect)
+  // Stats panel starts sliding in partway through the fly-in
+  const [showStats, setShowStats] = useState(!sourceRect)
   useEffect(() => {
     if (!sourceRect) return
     requestAnimationFrame(() => setBackdropIn(true))
+    const t = setTimeout(() => setShowStats(true), ANIM_DURATION * 0.45)
+    return () => clearTimeout(t)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Kick off the fly-in animation on first mount only
@@ -247,10 +251,10 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
 
         {/* Stats content box — slides up + fades in */}
         <div className="relative min-w-0 w-full lg:w-[480px]" style={{
-          opacity: isOpen ? 1 : 0,
-          transform: isOpen ? 'translateY(0)' : 'translateY(40px)',
-          transition: 'opacity 400ms ease 80ms, transform 400ms cubic-bezier(0.16, 1, 0.3, 1) 80ms',
-          willChange: isOpen ? 'auto' : 'transform, opacity',
+          opacity: showStats ? 1 : 0,
+          transform: showStats ? 'translateY(0)' : 'translateY(40px)',
+          transition: 'opacity 450ms ease, transform 450ms cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: showStats ? 'auto' : 'transform, opacity',
         }}>
           {/* Rank circle */}
           <div

@@ -68,6 +68,7 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
   // Animation phase: 'animating' → 'open', or skip straight to 'open'
   const [phase, setPhase] = useState(sourceRect ? 'animating' : 'open')
   const flyRef = useRef(null)
+  const targetRef = useRef(null)
   const consumedRect = useRef(false)
 
   // Kick off the fly-in animation on first mount only
@@ -76,18 +77,28 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
     consumedRect.current = true
 
     const el = flyRef.current
-    if (!el) { setPhase('open'); return }
+    const targetEl = targetRef.current
+    if (!el || !targetEl) { setPhase('open'); return }
 
-    // Source: card's bounding rect in the grid
+    // Measure where the card lands in the lightbox
+    const targetRect = targetEl.getBoundingClientRect()
+
+    // Position the flying card at the target location (its resting place)
+    el.style.left = `${targetRect.left}px`
+    el.style.top = `${targetRect.top}px`
+
+    // Source scale relative to full card size
     const srcScale = sourceRect.width / CARD_W
-    const srcX = sourceRect.left + sourceRect.width / 2 - window.innerWidth / 2
-    const srcY = sourceRect.top + sourceRect.height / 2 - window.innerHeight / 2
 
-    // Start at source position
-    el.style.transform = `translate(${srcX}px, ${srcY}px) scale(${srcScale})`
+    // Translate so card center moves from source center to target center
+    const dx = (sourceRect.left + sourceRect.width / 2) - (targetRect.left + CARD_W / 2)
+    const dy = (sourceRect.top + sourceRect.height / 2) - (targetRect.top + CARD_H / 2)
+
+    // Start at source position/scale
+    el.style.transform = `translate(${dx}px, ${dy}px) scale(${srcScale})`
     el.style.transition = 'none'
 
-    // Force reflow then animate to center
+    // Force reflow then animate to target
     el.getBoundingClientRect()
     requestAnimationFrame(() => {
       el.style.transition = `transform ${ANIM_DURATION}ms cubic-bezier(0.16, 1, 0.3, 1)`
@@ -132,14 +143,16 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
       }}
       onClick={onClose}
     >
-      {/* Flying card overlay during animation */}
+      {/* Flying card overlay during animation — positioned to land exactly on the lightbox card */}
       {phase === 'animating' && (
-        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 10002 }}>
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 10002 }}>
           <div
             ref={flyRef}
             style={{
+              position: 'absolute',
               width: CARD_W, height: CARD_H,
               willChange: 'transform',
+              transformOrigin: 'center center',
             }}
           >
             <ProspectCard3D
@@ -201,7 +214,7 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         style={{ width: 'fit-content', maxWidth: '100%' }}
       >
         {/* 3D Card */}
-        <div className="flex-shrink-0 lightbox-card-wrap" style={{ overflow: 'visible', paddingTop: 32 }}>
+        <div ref={targetRef} className="flex-shrink-0 lightbox-card-wrap" style={{ overflow: 'visible', paddingTop: 32 }}>
           <ProspectCard3D
             prospect={prospect}
             bgColor={bgColor}

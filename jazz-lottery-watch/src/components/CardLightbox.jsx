@@ -170,12 +170,14 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
               transformStyle: 'preserve-3d',
             }}
           >
-            <ProspectCard3D
-              prospect={prospect}
-              bgColor={bgColor}
-              holo={prospect.rank <= 4}
-              showHint={false}
-            />
+            <div className="lightbox-fly-card">
+              <ProspectCard3D
+                prospect={prospect}
+                bgColor={bgColor}
+                holo={prospect.rank <= 4}
+                showHint={false}
+              />
+            </div>
           </div>
         </div>
       )}

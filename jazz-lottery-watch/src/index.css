@@ -183,6 +183,11 @@ select {
     margin-bottom: -80px;
   }
 
+  .lightbox-fly-card .prospect-card-3d-wrap {
+    transform: none !important;
+    margin-bottom: 0 !important;
+  }
+
   .squiggle-divider {
     width: 100% !important;
   }

@@ -118,7 +118,7 @@ function ProspectCard({ prospect, index }) {
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-center lg:items-start mx-auto" style={{ width: 'fit-content', maxWidth: '100%' }}>
       {/* 3D Card column */}
       <div className="flex-shrink-0 self-center lg:self-start lg:sticky" style={{ top: 24 }}>
-        <ProspectCard3D prospect={prospect} bgColor={bgColor} holo={prospect.rank <= 4} />
+        <ProspectCard3D prospect={prospect} bgColor={bgColor} holo={prospect.rank <= 4} showHint={index === 0} />
       </div>
 
       {/* Content box column */}
@@ -271,8 +271,11 @@ export default function DraftGuide() {
   const [posFilter, setPosFilter] = useState('All')
   const [viewMode, setViewMode] = useState('binder')
   const [selectedProspect, setSelectedProspect] = useState(null)
+  const [sourceRect, setSourceRect] = useState(null)
 
-  useEffect(() => { document.title = 'Draft Guide | Salt City Hoops' }, [])
+  useEffect(() => {
+    document.title = '2026 Draft Guide | Salt City Hoops'
+  }, [])
 
   const filtered = useMemo(
     () => posFilter === 'All'
@@ -284,11 +287,19 @@ export default function DraftGuide() {
   return (
     <>
       <LayoutConfig title="2026 Draft Guide" />
-      <div style={{ background: '#ffffff', minHeight: '100vh' }}>
+      <div style={{ background: '#ffffff', minHeight: '100vh', overflowX: 'clip' }}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         {/* Toggle bar */}
-        <div className="mb-3 flex justify-center">
-          <div className="flex items-center gap-1" style={{ border: '1px solid var(--border)', borderRadius: 6, padding: 2 }}>
+        <div className="flex justify-center" style={{ marginBottom: viewMode === 'binder' ? 28 : 12 }}>
+          <div className="flex items-center" style={{ border: '1px solid var(--border)', borderRadius: 6, padding: 2, position: 'relative' }}>
+            {/* Sliding pill */}
+            <div style={{
+              position: 'absolute',
+              width: 32, height: 28, borderRadius: 4,
+              background: 'var(--sch-black)',
+              transform: `translateX(${viewMode === 'binder' ? 0 : 36}px)`,
+              transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            }} />
             {[
               { mode: 'binder', Icon: GridIcon, label: 'Binder view' },
               { mode: 'list', Icon: ListIcon, label: 'List view' },
@@ -298,11 +309,13 @@ export default function DraftGuide() {
                 title={label}
                 onClick={() => setViewMode(mode)}
                 style={{
+                  position: 'relative', zIndex: 1,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: 32, height: 28, borderRadius: 4, border: 'none', cursor: 'pointer',
-                  background: viewMode === mode ? 'var(--sch-black)' : 'transparent',
+                  background: 'transparent',
                   color: viewMode === mode ? '#fff' : 'var(--text-muted)',
-                  transition: 'background 0.15s, color 0.15s',
+                  transition: 'color 0.2s',
+                  marginRight: mode === 'binder' ? 4 : 0,
                 }}
               >
                 <Icon />
@@ -312,35 +325,59 @@ export default function DraftGuide() {
         </div>
 
         {/* Position filter — only in list view */}
-        {viewMode === 'list' && (
-          <div style={{ marginBottom: 44 }} className="flex justify-center">
-            <FilterGroup label="" options={POSITIONS} value={posFilter} onChange={setPosFilter} />
-          </div>
-        )}
+        <div style={{
+          overflow: 'hidden',
+          maxHeight: viewMode === 'list' ? 60 : 0,
+          opacity: viewMode === 'list' ? 1 : 0,
+          marginBottom: viewMode === 'list' ? 44 : 0,
+          transition: 'max-height 0.35s ease, opacity 0.3s ease, margin-bottom 0.35s ease',
+        }} className="flex justify-center">
+          <FilterGroup label="" options={POSITIONS} value={posFilter} onChange={setPosFilter} />
+        </div>
 
         {/* Views */}
-        {viewMode === 'list' ? (
-          <div className="flex flex-col gap-10">
-            {filtered.map((p, i) => (
-              <div key={p.rank}>
-                <ProspectCard prospect={p} index={i} />
-                {i < filtered.length - 1 && (
-                  <img
-                    src="/squiggle-divider.svg"
-                    alt=""
-                    className="squiggle-divider"
-                    style={{ width: '40%', margin: '72px auto 32px' }}
-                  />
-                )}
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            opacity: viewMode === 'list' ? 1 : 0,
+            transition: 'opacity 0.35s ease',
+            pointerEvents: viewMode === 'list' ? 'auto' : 'none',
+            position: viewMode === 'list' ? 'relative' : 'absolute',
+            top: 0, left: 0, width: '100%',
+          }}>
+            {(viewMode === 'list') && (
+              <div className="flex flex-col gap-10">
+                {filtered.map((p, i) => (
+                  <div key={p.rank}>
+                    <ProspectCard prospect={p} index={i} />
+                    {i < filtered.length - 1 && (
+                      <img
+                        src="/squiggle-divider.svg"
+                        alt=""
+                        className="squiggle-divider"
+                        style={{ width: '40%', margin: '72px auto 32px' }}
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        ) : (
-          <BinderView
-            prospects={DRAFT_GUIDE_PROSPECTS}
-            onCardClick={setSelectedProspect}
-          />
-        )}
+          <div style={{
+            opacity: viewMode === 'binder' ? 1 : 0,
+            transition: 'opacity 0.35s ease',
+            pointerEvents: viewMode === 'binder' ? 'auto' : 'none',
+            position: viewMode === 'binder' ? 'relative' : 'absolute',
+            top: 0, left: 0, width: '100%',
+          }}>
+            <BinderView
+              prospects={DRAFT_GUIDE_PROSPECTS}
+              onCardClick={(prospect, rect) => {
+                setSourceRect(rect || null)
+                setSelectedProspect(prospect)
+              }}
+            />
+          </div>
+        </div>
       </div>
       </div>
 
@@ -348,7 +385,10 @@ export default function DraftGuide() {
       {selectedProspect && (
         <CardLightbox
           prospect={selectedProspect}
-          onClose={() => setSelectedProspect(null)}
+          prospects={DRAFT_GUIDE_PROSPECTS}
+          onClose={() => { setSelectedProspect(null); setSourceRect(null) }}
+          onNavigate={setSelectedProspect}
+          sourceRect={sourceRect}
         />
       )}
     </>

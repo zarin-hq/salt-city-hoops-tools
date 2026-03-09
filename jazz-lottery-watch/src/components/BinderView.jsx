@@ -1,4 +1,5 @@
-import { useRef, useState, useLayoutEffect } from 'react'
+import { useRef, useState, useEffect, useLayoutEffect } from 'react'
+import useIsMobile from '../hooks/useIsMobile'
 import ProspectCard3D from './ProspectCard3D'
 
 const PHOTO_BG_COLORS = ['#000000', '#2E157D']
@@ -39,32 +40,47 @@ const BG_PLACEMENTS = [
 ]
 
 export default function BinderView({ prospects, onCardClick }) {
+  const isMobile = useIsMobile()
   const pages = []
   for (let i = 0; i < prospects.length; i += 9) {
     pages.push(prospects.slice(i, i + 9))
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, padding: '0 8px', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, padding: '0 8px', overflow: 'visible' }}>
       {pages.map((pageProspects, pageIdx) => (
-        <BinderPage key={pageIdx} prospects={pageProspects} startIndex={pageIdx * 9} onCardClick={onCardClick} pageIdx={pageIdx} />
+        <BinderPage key={pageIdx} prospects={pageProspects} startIndex={pageIdx * 9} onCardClick={onCardClick} pageIdx={pageIdx} isMobile={isMobile} />
       ))}
     </div>
   )
 }
 
-function BinderPage({ prospects, startIndex, onCardClick, pageIdx }) {
+function BinderPage({ prospects, startIndex, onCardClick, pageIdx, isMobile }) {
   const placements = BG_PLACEMENTS[pageIdx % BG_PLACEMENTS.length]
+  const pageRef = useRef(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = pageRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
+      { threshold: 0.1 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <div
+      ref={pageRef}
       style={{
         width: '100%',
         maxWidth: 560,
         position: 'relative',
       }}
     >
-      {/* Background scattered cards/tickets */}
+      {/* Background scattered cards/tickets — static, no animation */}
       {placements.map((p, i) => {
         const pos = {}
         if (p.top != null) pos.top = `${p.top}%`
@@ -89,13 +105,13 @@ function BinderPage({ prospects, startIndex, onCardClick, pageIdx }) {
             <img
               src={p.src}
               alt=""
-              style={{ width: '100%', height: 'auto', display: 'block', opacity: 0.15, borderRadius: 4 }}
+              style={{ width: '100%', height: 'auto', display: 'block', opacity: 0.1, borderRadius: 4 }}
             />
           </div>
         )
       })}
 
-      {/* Binder page */}
+      {/* Binder page — slides up over background */}
       <div
         style={{
           width: '100%',
@@ -104,6 +120,9 @@ function BinderPage({ prospects, startIndex, onCardClick, pageIdx }) {
           overflow: 'hidden',
           zIndex: 1,
           filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.12))',
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translateY(0)' : 'translateY(60px)',
+          transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${pageIdx * 0.12}s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${pageIdx * 0.12}s`,
         }}
       >
       <img
@@ -140,6 +159,7 @@ function BinderPage({ prospects, startIndex, onCardClick, pageIdx }) {
               prospect={prospect}
               index={startIndex + i}
               onCardClick={onCardClick}
+              isMobile={isMobile}
             />
           )
         })}
@@ -164,7 +184,7 @@ const BADGE_PLACEMENTS = [
   { bottom: 7, left: 3, rotate: -7 },
 ]
 
-function PocketSlot({ prospect, index, onCardClick }) {
+function PocketSlot({ prospect, index, onCardClick, isMobile }) {
   const bgColor = PHOTO_BG_COLORS[index % PHOTO_BG_COLORS.length]
   const containerRef = useRef(null)
   const [scale, setScale] = useState(0.4)
@@ -199,7 +219,10 @@ function PocketSlot({ prospect, index, onCardClick }) {
         height: '100%',
         cursor: 'pointer',
       }}
-      onClick={() => onCardClick(prospect)}
+      onClick={() => {
+        const rect = containerRef.current?.getBoundingClientRect()
+        onCardClick(prospect, rect || null)
+      }}
     >
       {/* Card — translates on hover */}
       <div
@@ -240,7 +263,7 @@ function PocketSlot({ prospect, index, onCardClick }) {
         background: STICKER_COLORS[index % STICKER_COLORS.length],
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 2,
-        transform: `rotate(${p.rotate}deg) scale(${Math.min(scale / 0.4, 1)})`,
+        transform: `rotate(${p.rotate}deg) scale(${Math.min(scale / 0.4, 1) * (isMobile ? 0.86 : 1)})`,
         pointerEvents: 'none',
       }}>
         <span style={{

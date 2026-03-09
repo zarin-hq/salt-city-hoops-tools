@@ -224,15 +224,17 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         style={{ width: 'fit-content', maxWidth: '100%' }}
       >
         {/* 3D Card — hidden during fly-in, appears instantly when animation ends */}
-        <div ref={targetRef} className="flex-shrink-0 lightbox-card-wrap" style={{
+        <div className="flex-shrink-0 lightbox-card-wrap" style={{
           overflow: 'visible', paddingTop: 32,
           visibility: isOpen ? 'visible' : 'hidden',
         }}>
-          <ProspectCard3D
-            prospect={prospect}
-            bgColor={bgColor}
-            holo={prospect.rank <= 4}
-          />
+          <div ref={targetRef}>
+            <ProspectCard3D
+              prospect={prospect}
+              bgColor={bgColor}
+              holo={prospect.rank <= 4}
+            />
+          </div>
         </div>
 
         {/* Stats content box — slides up + fades in */}

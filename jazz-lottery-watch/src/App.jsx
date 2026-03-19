@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { apiUrl } from './lib/api'
 import TankTable from './components/TankTable'
 import TodayGames from './components/TodayGames'
@@ -73,24 +73,7 @@ export default function App() {
 
   return (
     <>
-      <LayoutConfig
-        title="Jazz Lottery Watch"
-        headerRight={
-          <>
-            <span className="hidden sm:inline text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              Updated {lastUpdated}
-            </span>
-            <button
-              onClick={refetchAll}
-              className="hidden sm:block"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontSize: 18, lineHeight: 1, padding: 0 }}
-              title="Refresh"
-            >
-              ↻
-            </button>
-          </>
-        }
-      />
+      <LayoutConfig title="Jazz Lottery Watch" />
 
       <main className="max-w-[1600px] mx-auto px-4 py-8 space-y-[30px]">
         <section>
@@ -143,12 +126,20 @@ export default function App() {
           <SectionHeader title="The Bottom Line" />
           <BottomLine standings={standings.data} jazzOdds={jazzOdds.data} />
         </section>
-      </main>
 
-      <section className="max-w-[1600px] mx-auto px-4 pt-4 pb-10">
-        <SectionHeader title="Discussion" />
-        <DiscourseComments />
-      </section>
+        <div className="flex items-center justify-center gap-2 pt-4 pb-2">
+          <span className="text-xs" style={{ color: 'var(--text-faint)' }}>
+            Updated {lastUpdated}
+          </span>
+          <button
+            onClick={refetchAll}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 18, lineHeight: 1, padding: 0 }}
+            title="Refresh"
+          >
+            ↻
+          </button>
+        </div>
+      </main>
     </>
   )
 }
@@ -210,29 +201,3 @@ function SectionHeader({ title, subtitle }) {
   )
 }
 
-function DiscourseComments() {
-  const containerRef = useRef(null)
-
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-
-    window.DiscourseEmbed = {
-      discourseUrl: 'https://saltcityhoops.discourse.group/',
-      discourseEmbedUrl: 'https://salt-city-hoops-tools.vercel.app/lottery-watch',
-    }
-
-    const script = document.createElement('script')
-    script.type = 'text/javascript'
-    script.async = true
-    script.src = 'https://saltcityhoops.discourse.group/javascripts/embed.js'
-    el.appendChild(script)
-
-    return () => {
-      script.remove()
-      delete window.DiscourseEmbed
-    }
-  }, [])
-
-  return <div ref={containerRef} id="discourse-comments" />
-}

@@ -58,6 +58,8 @@ function NavArrow({ direction, onClick }) {
 const CARD_W = 300
 const CARD_H = 420
 const ANIM_DURATION = 800
+const FLIP_DURATION = 500
+const FLIP_HALF = FLIP_DURATION / 2
 
 export default function CardLightbox({ prospect, prospects = [], onClose, onNavigate, sourceRect }) {
   const bgColor = PHOTO_BG_COLORS[(prospect.rank - 1) % PHOTO_BG_COLORS.length]
@@ -71,6 +73,17 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
   const targetRef = useRef(null)
   const consumedRect = useRef(false)
 
+  // Card flip navigation state
+  const [flipState, setFlipState] = useState(null)
+  const [displayProspect, setDisplayProspect] = useState(prospect)
+  const flipCardRef = useRef(null)
+  const displayBgColor = PHOTO_BG_COLORS[(displayProspect.rank - 1) % PHOTO_BG_COLORS.length]
+
+  // Sync display prospect with prop when not flipping
+  useEffect(() => {
+    if (!flipState) setDisplayProspect(prospect)
+  }, [prospect]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Backdrop fades in immediately on mount (during animation, not after)
   const [backdropIn, setBackdropIn] = useState(!sourceRect)
   // Stats panel starts sliding in partway through the fly-in
@@ -81,6 +94,12 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
     const t = setTimeout(() => setShowStats(true), ANIM_DURATION * 0.45)
     return () => clearTimeout(t)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Hide body scrollbar before measuring positions to prevent layout shift
+  useLayoutEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
 
   // Kick off the fly-in animation on first mount only
   useLayoutEffect(() => {
@@ -131,22 +150,50 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
     return () => clearTimeout(timer)
   }, [phase])
 
+  const isOpen = phase === 'open'
+
+  const handleNavigate = useCallback((nextP) => {
+    if (flipState || !isOpen) return
+    const el = flipCardRef.current
+    if (!el) { onNavigate(nextP); return }
+
+    setFlipState({ next: nextP })
+
+    // Phase 1: rotate out (0 → 90deg)
+    el.style.transition = `transform ${FLIP_HALF}ms cubic-bezier(0.4, 0, 1, 1)`
+    el.style.transform = 'rotateY(90deg)'
+
+    // At midpoint: swap card, rotate in (-90 → 0)
+    setTimeout(() => {
+      setDisplayProspect(nextP)
+      el.style.transition = 'none'
+      el.style.transform = 'rotateY(-90deg)'
+      el.getBoundingClientRect()
+      requestAnimationFrame(() => {
+        el.style.transition = `transform ${FLIP_HALF}ms cubic-bezier(0, 0, 0.2, 1)`
+        el.style.transform = 'rotateY(0deg)'
+      })
+    }, FLIP_HALF)
+
+    // Complete: commit navigation
+    setTimeout(() => {
+      onNavigate(nextP)
+      setFlipState(null)
+    }, FLIP_DURATION + 50)
+  }, [flipState, isOpen, onNavigate])
+
   const onKeyDown = useCallback((e) => {
     if (e.key === 'Escape') onClose()
-    if (e.key === 'ArrowLeft' && prevProspect && onNavigate) onNavigate(prevProspect)
-    if (e.key === 'ArrowRight' && nextProspect && onNavigate) onNavigate(nextProspect)
-  }, [onClose, prevProspect, nextProspect, onNavigate])
+    if (e.key === 'ArrowLeft' && prevProspect && onNavigate) handleNavigate(prevProspect)
+    if (e.key === 'ArrowRight' && nextProspect && onNavigate) handleNavigate(nextProspect)
+  }, [onClose, prevProspect, nextProspect, onNavigate, handleNavigate])
 
   useEffect(() => {
     document.addEventListener('keydown', onKeyDown)
-    document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = ''
     }
   }, [onKeyDown])
-
-  const isOpen = phase === 'open'
 
   return (
     <div
@@ -221,7 +268,7 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
           opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease 80ms',
         }}>
           {prevProspect && onNavigate ? (
-            <NavArrow direction="prev" onClick={() => onNavigate(prevProspect)} />
+            <NavArrow direction="prev" onClick={() => handleNavigate(prevProspect)} />
           ) : <div style={{ width: 44 }} />}
         </div>
 
@@ -231,25 +278,51 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-center lg:items-start"
         style={{ width: 'fit-content', maxWidth: '100%' }}
       >
-        {/* 3D Card — hidden during fly-in, appears instantly when animation ends */}
-        <div className="flex-shrink-0 lightbox-card-wrap" style={{
+        {/* 3D Card with mobile arrows overlaid */}
+        <div className="flex-shrink-0 relative" style={{
           overflow: 'visible', paddingTop: 32,
-          visibility: isOpen ? 'visible' : 'hidden',
+          opacity: isOpen ? 1 : 0,
         }}>
-          <div ref={targetRef}>
-            <ProspectCard3D
-              prospect={prospect}
-              bgColor={bgColor}
-              holo={prospect.rank <= 4}
-            />
+          {/* Mobile prev arrow — overlaid on left edge */}
+          {onNavigate && prevProspect && (
+            <div className="flex lg:hidden absolute" style={{
+              left: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2,
+              opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease 80ms',
+            }}>
+              <NavArrow direction="prev" onClick={() => handleNavigate(prevProspect)} />
+            </div>
+          )}
+
+          <div className="lightbox-card-wrap">
+            <div ref={targetRef} style={{ perspective: 1200 }}>
+              <div ref={flipCardRef}>
+                <ProspectCard3D
+                  prospect={displayProspect}
+                  bgColor={displayBgColor}
+                  holo={displayProspect.rank <= 4}
+                />
+              </div>
+            </div>
           </div>
+
+          {/* Mobile next arrow — overlaid on right edge */}
+          {onNavigate && nextProspect && (
+            <div className="flex lg:hidden absolute" style={{
+              right: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 2,
+              opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease 80ms',
+            }}>
+              <NavArrow direction="next" onClick={() => handleNavigate(nextProspect)} />
+            </div>
+          )}
         </div>
 
         {/* Stats content box — slides up + fades in */}
         <div className="relative min-w-0 w-full lg:w-[480px]" style={{
-          opacity: showStats ? 1 : 0,
+          opacity: showStats ? (flipState ? 0 : 1) : 0,
           transform: showStats ? 'translateY(0)' : 'translateY(40px)',
-          transition: 'opacity 450ms ease, transform 450ms cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: flipState
+            ? 'opacity 200ms ease'
+            : 'opacity 350ms ease 50ms, transform 450ms cubic-bezier(0.16, 1, 0.3, 1)',
         }}>
           {/* Rank circle */}
           <div
@@ -361,23 +434,6 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
         </div>
       </div>
 
-      {/* Mobile prev/next arrows — fade in */}
-      {onNavigate && (
-        <div className="flex lg:hidden items-center justify-center gap-4" style={{
-          paddingBottom: 8,
-          opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease 80ms',
-        }}>
-          {prevProspect ? (
-            <NavArrow direction="prev" onClick={() => onNavigate(prevProspect)} />
-          ) : <div style={{ width: 44 }} />}
-          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600 }}>
-            {prospect.rank} / {prospects.length}
-          </span>
-          {nextProspect ? (
-            <NavArrow direction="next" onClick={() => onNavigate(nextProspect)} />
-          ) : <div style={{ width: 44 }} />}
-        </div>
-      )}
       </div>
 
         {/* Next arrow — desktop only, fades in */}
@@ -386,7 +442,7 @@ export default function CardLightbox({ prospect, prospects = [], onClose, onNavi
           opacity: isOpen ? 1 : 0, transition: 'opacity 250ms ease 80ms',
         }}>
           {nextProspect && onNavigate ? (
-            <NavArrow direction="next" onClick={() => onNavigate(nextProspect)} />
+            <NavArrow direction="next" onClick={() => handleNavigate(nextProspect)} />
           ) : <div style={{ width: 44 }} />}
         </div>
       </div>

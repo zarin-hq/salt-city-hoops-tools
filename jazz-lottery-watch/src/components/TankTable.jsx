@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import useIsMobile from '../hooks/useIsMobile'
 
 const JAZZ_ID = 1610612762
 const PICKS = Array.from({ length: 14 }, (_, i) => i + 1)
@@ -96,6 +97,7 @@ function Td({ children, divider = false, compact = false, wrap = false, stickyCe
 }
 
 export default function TankTable({ data, loading, error }) {
+  const isMobile = useIsMobile()
   const [showAll, setShowAll] = useState(false)
   const [showPicks, setShowPicks] = useState(false)
 
@@ -158,13 +160,14 @@ export default function TankTable({ data, loading, error }) {
               // Solid background for sticky cells — transparent rowBg causes bleed-through when scrolling
               const stickyBg = isJazz ? '#f3f4f7' : isEven ? '#ffffff' : '#f3f3f3'
               const jb = isJazz ? '1px solid var(--sch-black)' : undefined
-              const jazzT = isJazz ? { borderTop: jb } : {}
+              const jazzT = isJazz && !isMobile ? { borderTop: jb } : {}
 
               return (
                 <tr key={team.team_id}
                   style={{
                     background: rowBg,
-                    borderBottom: isJazz ? jb : '1px solid var(--border)',
+                    borderBottom: isJazz && !isMobile ? jb : !isJazz ? '1px solid var(--border)' : undefined,
+                    outline: isJazz && isMobile ? '1px solid var(--sch-black)' : undefined,
                     transition: 'background 0.1s',
                   }}
                   onMouseEnter={e => {
@@ -176,7 +179,7 @@ export default function TankTable({ data, loading, error }) {
                     e.currentTarget.querySelectorAll('[data-sticky]').forEach(td => { td.style.background = stickyBg })
                   }}
                 >
-                  <Td stickyCell extraStyle={{ ...jazzT, ...(isJazz ? { borderLeft: jb } : {}), width: 40, position: 'sticky', left: 0, zIndex: 2, background: stickyBg }}>
+                  <Td stickyCell extraStyle={{ ...jazzT, ...(isJazz && !isMobile ? { borderLeft: jb } : {}), width: 40, position: 'sticky', left: 0, zIndex: 2, background: stickyBg }}>
                     <span style={{ color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>{team.lottery_slot}</span>
                   </Td>
 
@@ -255,7 +258,7 @@ export default function TankTable({ data, loading, error }) {
 
                   {showPicks && PICKS.map((p, idx) => (
                     <Td key={p} divider={idx === 0} compact
-                      extraStyle={{ ...jazzT, ...(isJazz && idx === PICKS.length - 1 ? { borderRight: jb } : {}) }}>
+                      extraStyle={{ ...jazzT, ...(isJazz && !isMobile && idx === PICKS.length - 1 ? { borderRight: jb } : {}) }}>
                       <OddsCell pct={team.pick_odds?.[String(p)]} />
                     </Td>
                   ))}

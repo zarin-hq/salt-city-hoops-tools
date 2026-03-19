@@ -251,7 +251,7 @@ function CardEdges() {
 
 /* ── Main 3D Card Component ───────────────────────────────── */
 
-export default function ProspectCard3D({ prospect, bgColor = '#000', holo = false, holoIntensity = 1, flat = false, width, height, onClick }) {
+export default function ProspectCard3D({ prospect, bgColor = '#000', holo = false, holoIntensity = 1, flat = false, width, height, onClick, showHint = true }) {
   const cardW = width || CARD_W
   const cardH = height || CARD_H
   const scaleX = cardW / CARD_W
@@ -331,7 +331,7 @@ export default function ProspectCard3D({ prospect, bgColor = '#000', holo = fals
       </div>
 
       {/* Hint text */}
-      {!flat && (
+      {!flat && showHint && (
         <div style={{ fontSize: 10, color: '#999', textAlign: 'center' }}>
           Drag to rotate · Double-click to reset
         </div>

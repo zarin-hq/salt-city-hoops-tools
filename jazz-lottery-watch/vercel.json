@@ -1,6 +1,10 @@
 {
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://nba-tank-dashboard.onrender.com/api/:path*" },
+    { "source": "/lottery-watch", "destination": "/lottery-watch/index.html" },
+    { "source": "/draft-guide", "destination": "/draft-guide/index.html" },
+    { "source": "/free-agency-simulator", "destination": "/free-agency-simulator/index.html" },
+    { "source": "/draft-history", "destination": "/draft-history/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

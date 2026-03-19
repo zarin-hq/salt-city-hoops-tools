@@ -191,6 +191,7 @@ function GameCard({ game, slotMap }) {
         lotterySlot={slotMap[game.away_team_id]}
         inBottom10={game.away_in_bottom10}
         isWinning={awayWin}
+        isFinal={isFinal}
         showScore={isLive || isFinal}
         injuries={game.away_injuries}
       />
@@ -206,6 +207,7 @@ function GameCard({ game, slotMap }) {
         lotterySlot={slotMap[game.home_team_id]}
         inBottom10={game.home_in_bottom10}
         isWinning={homeWin}
+        isFinal={isFinal}
         showScore={isLive || isFinal}
         injuries={game.home_injuries}
       />
@@ -213,11 +215,11 @@ function GameCard({ game, slotMap }) {
   )
 }
 
-function TeamRow({ teamId, name, record, score, lotterySlot, inBottom10, isWinning, showScore, injuries }) {
+function TeamRow({ teamId, name, record, score, lotterySlot, inBottom10, isWinning, isFinal, showScore, injuries }) {
   const lastName = name.split(' ').slice(-1)[0]
   return (
     <div className="flex items-center px-2.5 py-2 sm:px-3 sm:py-3"
-      style={{ opacity: showScore && !isWinning ? 0.45 : 1 }}>
+      style={{ opacity: isFinal && !isWinning ? 0.45 : 1 }}>
       <img
         src={`https://cdn.nba.com/logos/nba/${teamId}/primary/L/logo.svg`}
         alt=""

@@ -5,6 +5,7 @@
     { "source": "/draft-guide", "destination": "/draft-guide/index.html" },
     { "source": "/free-agency-simulator", "destination": "/free-agency-simulator/index.html" },
     { "source": "/draft-history", "destination": "/draft-history/index.html" },
+    { "source": "/cap-table", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

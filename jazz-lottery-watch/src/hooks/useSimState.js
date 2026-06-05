@@ -192,8 +192,8 @@ export default function useSimState() {
       }
     })
 
-    // Draft pick salary (placeholder $8M if none selected)
-    totalPayroll += state.draftPick ? state.draftPick.salary : 8_000_000
+    // Draft pick salary (placeholder #2 pick if none selected)
+    totalPayroll += state.draftPick ? state.draftPick.salary : 13_200_000
 
     // Signed free agents (vet min contracts count at 2-year min cap hit)
     state.signedFAs.forEach(fa => {
@@ -329,9 +329,9 @@ export default function useSimState() {
       })
     } else {
       players.push({
-        name: '2026 1st Round Pick',
+        name: '2026 Pick #2',
         position: '-',
-        salary: 8_000_000,
+        salary: 13_200_000,
         status: 'draft pick (est.)',
       })
     }

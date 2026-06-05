@@ -1,7 +1,7 @@
 // 2026 Rookie scale salaries at 120% (picks 1-14)
 const ROOKIE_SCALE = [
   { pick: 1,  salary: 12_200_000 },
-  { pick: 2,  salary: 10_800_000 },
+  { pick: 2,  salary: 13_200_000 },
   { pick: 3,  salary: 9_700_000 },
   { pick: 4,  salary: 8_800_000 },
   { pick: 5,  salary: 8_000_000 },

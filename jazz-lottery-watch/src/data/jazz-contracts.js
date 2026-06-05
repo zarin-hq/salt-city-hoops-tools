@@ -2,12 +2,12 @@
 // Sources: Spotrac, Basketball-Reference, SalarySwish
 
 export const CAP_NUMBERS = {
-  salaryCap: 166_000_000,
-  luxuryTax: 200_000_000,
-  firstApron: 210_300_000,
+  salaryCap: 165_000_000,
+  luxuryTax: 201_000_000,
+  firstApron: 209_000_000,
   secondApron: 222_000_000,
-  mle: 15_139_000,
-  mleHardCapThreshold: 6_000_000,
+  mle: 15_048_000,
+  mleHardCapThreshold: 6_065_000,
   minRosterSize: 12,
   // Trade matching thresholds (2026-27, indexed to cap)
   tradeTier1: 8_874_000,    // outgoing ≤ this → 200% + $250K

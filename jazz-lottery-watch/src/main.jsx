@@ -6,6 +6,7 @@ import StyleGuide from './StyleGuide'
 import FreeAgency from './pages/FreeAgency'
 import DraftHistory from './pages/DraftHistory'
 import DraftGuide from './pages/DraftGuide'
+import CapTable from './pages/CapTable'
 import Layout from './components/Layout'
 import './index.css'
 
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/free-agency" element={<Navigate to="/free-agency-simulator" replace />} />
           <Route path="/draft-history" element={<DraftHistory />} />
           <Route path="/draft-guide" element={<DraftGuide />} />
+          <Route path="/cap-table" element={<CapTable />} />
         </Route>
         <Route path="/style-guide" element={<StyleGuide />} />
         <Route path="/" element={<Navigate to="/lottery-watch" replace />} />

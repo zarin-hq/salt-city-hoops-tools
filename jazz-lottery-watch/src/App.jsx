@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useState, useEffect, useCallback } from 'react'
+=======
+import { useState, useEffect, useCallback, useRef } from 'react'
+>>>>>>> d8b3d04f36386f3b1fdda03413a23470443e2d7a
 import { apiUrl } from './lib/api'
 import TankTable from './components/TankTable'
 import TodayGames from './components/TodayGames'
@@ -127,6 +131,7 @@ export default function App() {
           <BottomLine standings={standings.data} jazzOdds={jazzOdds.data} />
         </section>
 
+<<<<<<< HEAD
         <div className="flex items-center justify-center gap-2 pt-4 pb-2">
           <span className="text-xs" style={{ color: 'var(--text-faint)' }}>
             Updated {lastUpdated}
@@ -140,6 +145,8 @@ export default function App() {
           </button>
         </div>
       </main>
+=======
+>>>>>>> d8b3d04f36386f3b1fdda03413a23470443e2d7a
     </>
   )
 }

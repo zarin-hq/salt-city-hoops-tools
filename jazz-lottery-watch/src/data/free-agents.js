@@ -34,6 +34,7 @@ const FREE_AGENTS = [
   { name: 'Quentin Grimes',     espnId: '4397014', position: 'SG',   age: 26, team: 'DAL', type: 'UFA', estimatedSalary: 6_000_000,  yearsExp: 5,  stats: { ppg: 10.2, rpg: 3.0, apg: 2.0, tpPct: 37.5 } },
   { name: 'Kevin Huerter',      espnId: '4066372', position: 'SG',   age: 28, team: 'SAC', type: 'UFA', estimatedSalary: 8_000_000,  yearsExp: 8,  stats: { ppg: 11.2, rpg: 3.1, apg: 2.5, tpPct: 38.0 } },
   { name: 'Bones Hyland',       espnId: '4592492', position: 'SG',   age: 26, team: 'LAC', type: 'UFA', estimatedSalary: 5_000_000,  yearsExp: 5,  stats: { ppg: 10.0, rpg: 2.4, apg: 3.0, tpPct: 34.2 } },
+  { name: 'Isaiah Joe',         espnId: '4395702', position: 'SG',   age: 27, team: 'OKC', type: 'UFA', estimatedSalary: 8_000_000,  yearsExp: 6,  stats: { ppg: 10.2, rpg: 2.8, apg: 1.6, tpPct: 40.8 } },
   { name: 'Luke Kennard',       espnId: '3913174', position: 'SG',   age: 30, team: 'MEM', type: 'UFA', estimatedSalary: 5_000_000,  yearsExp: 9,  stats: { ppg: 8.2, rpg: 2.4, apg: 2.3, tpPct: 44.1 } },
   { name: 'CJ McCollum',        espnId: '2490149', position: 'SG',   age: 35, team: 'NOP', type: 'UFA', estimatedSalary: 13_000_000, yearsExp: 13, stats: { ppg: 18.5, rpg: 3.4, apg: 3.8, tpPct: 38.2 } },
   { name: 'Josh Okogie',        espnId: '4065663', position: 'SG',   age: 28, team: 'PHX', type: 'UFA', estimatedSalary: 3_000_000,  yearsExp: 8,  stats: { ppg: 5.2, rpg: 3.0, apg: 1.0, tpPct: 30.5 } },
